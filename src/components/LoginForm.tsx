@@ -52,7 +52,10 @@ const Logo: React.FC<IProps> = props => {
             singleton.config.redirectUrl
           )}&scope=profile%20email`}
         >
-          <img src="/images/google-sign-in.png" alt="Google sign in link." />
+          <img
+            src="https://storage.googleapis.com/midtype-assets-staging/google-sign-in.png"
+            alt="Google sign in link."
+          />
         </a>
       </div>
       <div className="login__powered-by">
