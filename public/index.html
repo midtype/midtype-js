@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
+    <title>Midtype</title>
+    <style>
+      [data-mt-model],
+      [data-mt-if],
+      [data-mt-if-not] {
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Midtype.init({
+          projectName: 'foo1',
+          redirectUrl: 'http://localhost:3000/login',
+          projectId: 51,
+          stripe: false
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <button data-mt-action="login" data-mt-if-not="user">Login</button>
+    <div data-mt-model="user" data-mt-if="user">
+      <h1 data-mt-field="name"></h1>
+      <span data-mt-field="email"></span>
+      <img data-mt-field="photoUrl" data-mt-field-attribute="src" width="100" />
+    </div>
+    <form data-mt-form="timer" data-mt-if="user">
+      <input
+        type="text"
+        data-mt-form-field="ownerId"
+        data-mt-form-field-type="user"
+      />
+      <input type="text" data-mt-form-field="newField" />
+      <input
+        type="file"
+        accept="image/png, image/jpeg"
+        data-mt-form-field="imageId"
+        data-mt-form-field-type="asset"
+      />
+      <input
+        type="text"
+        data-mt-form-field="length"
+        data-mt-form-field-type="number"
+      />
+      <input type="submit" value="Submit" />
+    </form>
+    <div data-mt-nodes="timers" data-mt-if="user">
+      <div>
+        <hr />
+        <h3><span data-mt-field="newField"></span></h1>
+        <p data-mt-field="owner.name"></p>
+        <img data-mt-field="image.location" data-mt-field-attribute="src" width="100" />
+      </div>
+    </div>
+  </body>
+</html>
