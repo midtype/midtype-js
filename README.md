@@ -60,18 +60,18 @@ Now, we can do the same for any other model we have [defined in our Midtype proj
 ## API Reference
 You can easily attach data to your HTML elements using `data` attributes. You can also perform standard create and update operations on any object using HTML forms in conjunction with these attributes.
 
-| Attribute                 | Value                                          | HTML Elements | Purpose                                                                                                                                                                                 |
-| ------------------------- | ---------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data-mt-model`           | Any Model Name                                 | All           | Show data for a single record.  Must be used in conjunction with `data-mt-model-id` unless the model is `user`.                                                                         |
-| `data-mt-model-id`        | `UUID`                                         | All           | Must be used in conjunction with `data-mt-model` to specify which record to show data for.                                                                                              |
-| `data-mt-nodes`           | Any Model Name                                 | All           | Show  all records of the given model. Immediate child of element with this attribute must be a `<div>`.                                                                                 |
-| `data-mt-field`           | Any Field for Parent Model                     | All           | When used as a child of an element with `data-mt-model` or `data-mt-nodes`, it is injected with data from the given field. Supports dot notation for sub-fields (e.g. `photo.location`) |
-| `data-mt-form`            | Any Model Name                                 | `<form>`      | Allows user to create or update records of this model, based on child `<input>` elements. `<form>` must include an `<input type="submit" />` element.                                   |
-| `data-mt-form-id`         | `UUID`                                         | `<form>`      | If used in conjunction with `data-mt-form`, allows user to update fields on the record with the given ID.                                                                               |
-| `data-mt-form-field`      | Any Field for Parent Model                     | `<input>`     | When user submits the given form, the `value` attribute for this input will be saved for this the given field.                                                                          |
-| `data-mt-form-field-type` | `user`, `number`, `string`, `asset`, `boolean` | `<input>`     | The data type for a given input field. If the value is `asset`, the `<input>` must also have attribute `type="file"`. If no field type specified, defaults to `string`.                 |
-| `data-mt-if`              | `user`                                         | All           | Any element with this tag will be shown only if there is a user currently logged in.                                                                                                    |
-| `data-mt-if-not`          | `user`                                         | All           | Any element with this tag will be shown only if there is **not** a user currently logged in.                                                                                            |
+| Attribute                 | Value                                          | HTML Elements | Purpose                                                                                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-mt-model`           | Any Model Name                                 | All           | Show data for a single record.  Must be used in conjunction with `data-mt-model-id` unless the model is `user`.                                                                                                                                      |
+| `data-mt-model-id`        | `UUID`                                         | All           | Must be used in conjunction with `data-mt-model` to specify which record to show data for.                                                                                                                                                           |
+| `data-mt-nodes`           | Any Model Name                                 | All           | Show  all records of the given model. Immediate child of element with this attribute must be a `<div>`.                                                                                                                                              |
+| `data-mt-field`           | Any Field for Parent Model                     | All           | When used as a child of an element with `data-mt-model` or `data-mt-nodes`, it is injected with data from the given field. Supports dot notation for sub-fields (e.g. `photo.location`)                                                              |
+| `data-mt-form`            | Any Model Name                                 | `<form>`      | Allows user to create or update records of this model, based on child `<input>` elements. `<form>` must include an `<input type="submit" />` element.                                                                                                |
+| `data-mt-form-id`         | `UUID`                                         | `<form>`      | If used in conjunction with `data-mt-form`, allows user to update fields on the record with the given ID.                                                                                                                                            |
+| `data-mt-form-field`      | Any Field for Parent Model                     | `<input>`     | When user submits the given form, the `value` attribute for this input will be saved for this the given field.                                                                                                                                       |
+| `data-mt-form-field-type` | `user`, `number`, `string`, `asset`, `boolean` | `<input>`     | The data type for a given input field. If the value is `asset`, the `<input>` must also have attribute `type="file"`. If value is `boolean`, `<input>` must also have attribute `type="checkbox"`. If no field type specified, defaults to `string`. |
+| `data-mt-if`              | `user`                                         | All           | Any element with this tag will be shown only if there is a user currently logged in.                                                                                                                                                                 |
+| `data-mt-if-not`          | `user`                                         | All           | Any element with this tag will be shown only if there is **not** a user currently logged in.                                                                                                                                                         |
 
 ### Examples
 
@@ -112,7 +112,7 @@ If we want to show the logged-in user's data, we do not need to include a `data-
 The `data-mt-nodes` tag can be used similarly to `data-mt-model`, except it will automatically fetch all records of the model you specify that the logged in user has access to. **The immediate child of any HTML element with this tag must be a `<div>`.** This child `<div>` will be duplicated for the number of records that exist for this model.
 
 ```html
-<div data-mt-nodes="tasks">
+<div data-mt-nodes="task">
   <div>
     <h3>Summary: <span data-mt-field="summary"></span></h1>
     <h4 data-mt-field="owner.name"></h4>
@@ -125,11 +125,65 @@ The `data-mt-nodes` tag can be used similarly to `data-mt-model`, except it will
 
 #### Create a New Record
 
+```html
+<form data-mt-form="task">
+  <input
+    type="text"
+    data-mt-form-field="ownerId"
+    data-mt-form-field-type="user"
+  />
+  <input
+    type="text"
+    data-mt-form-field="summary"
+    data-mt-form-field-type="string"
+  />
+  <input
+    type="file"
+    accept="image/png, image/jpeg"
+    data-mt-form-field="screenshotId"
+    data-mt-form-field-type="asset"
+  />
+  <input
+    type="checkbox"
+    data-mt-form-field="completed"
+    data-mt-form-field-type="boolean"
+  />
+  <input type="submit" value="Submit" />
+</form>
+```
+
 ---
 
 #### Update an Existing Record
 
----
+The HTML for updating a record is almost identical to that for creating one, except we must also specify a `data-mt-form-id` value.
+
+```html
+<form data-mt-form="task" data-mt-form-id="312418da-de30-425a-8d6b-cad6a7402345">
+  <input
+    type="text"
+    data-mt-form-field="ownerId"
+    data-mt-form-field-type="user"
+  />
+  <input
+    type="text"
+    data-mt-form-field="summary"
+    data-mt-form-field-type="string"
+  />
+  <input
+    type="file"
+    accept="image/png, image/jpeg"
+    data-mt-form-field="screenshotId"
+    data-mt-form-field-type="asset"
+  />
+  <input
+    type="checkbox"
+    data-mt-form-field="completed"
+    data-mt-form-field-type="boolean"
+  />
+  <input type="submit" value="Submit" />
+</form>
+```
 
 ## Running This Project Locally
 

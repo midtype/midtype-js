@@ -49,7 +49,7 @@ const handleForms = async () =>
               break;
             }
             case 'boolean':
-              fields.push([fieldName, fieldNode.value ? true : false]);
+              fields.push([fieldName, fieldNode.checked ? true : false]);
               break;
             case 'number':
               fields.push([fieldName, parseFloat(fieldNode.value) || 0]);
