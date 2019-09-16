@@ -7,7 +7,8 @@ import { gql } from 'apollo-boost';
 
 import client from './apollo/client';
 import { ROOT_ELEMENT_ID, singleton } from './constants/identifiers';
-import { checkJWT, getJWT } from './utils/jwt';
+import { getJWT } from './utils/jwt';
+import { checkQueries } from './utils/queries';
 import {
   GET_CURRENT_USER,
   GET_CURRENT_USER_WITH_STRIPE
@@ -388,7 +389,7 @@ singleton.init = (config: IUniverseConfig) => {
       'Midtype package cannot be initiated without a valid Midtype Project name.'
     );
   }
-  checkJWT();
+  checkQueries();
 
   singleton.config = config;
 
