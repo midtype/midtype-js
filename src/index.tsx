@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import JSON5 from 'json5';
 import { ApolloProvider } from 'react-apollo';
 
 import pluralize from 'pluralize';
@@ -25,6 +26,7 @@ const asyncForEach = async (array: any[], callback: any) => {
 
 const handleForms = async () =>
   document.querySelectorAll<HTMLElement>('[data-mt-form]').forEach(node => {
+    const form = node.dataset.mtForm;
     node
       .querySelectorAll<HTMLElement>('[data-mt-form-field-type]')
       .forEach(fieldNode => {
@@ -33,7 +35,6 @@ const handleForms = async () =>
         }
       });
     const run = async () => {
-      const modelName = node.dataset.mtForm;
       const fields: Array<[string, string | boolean | number]> = [];
       const nodes = Array.from(
         node.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
@@ -67,7 +68,7 @@ const handleForms = async () =>
               if (asset) {
                 fields.push([fieldName, asset.asset_id]);
               } else {
-                throw Error(`Invalid asset uploaded for field ${fieldName}.`);
+                console.warn(`Invalid asset uploaded for field ${fieldName}.`);
               }
               break;
             default:
@@ -75,11 +76,11 @@ const handleForms = async () =>
           }
         }
       });
-      if (modelName) {
+      if (form) {
         const mutation = node.dataset.mtFormId
           ? gql`
         mutation {
-          update${uppercase(pluralize.singular(modelName))}(input: { id: "${
+          update${uppercase(pluralize.singular(form))}(input: { id: "${
               node.dataset.mtFormId
             }", patch: { ${fields
               .map(
@@ -95,8 +96,8 @@ const handleForms = async () =>
           : gql`
         mutation {
           create${uppercase(
-            pluralize.singular(modelName)
-          )}(input: { ${modelName}: { ${fields
+            pluralize.singular(form)
+          )}(input: { ${form}: { ${fields
               .map(
                 field =>
                   `${field[0]}: ${
@@ -125,18 +126,102 @@ const handleForms = async () =>
     }
   });
 
-const handleActions = () => {
-  const handlers: { [key: string]: [string, any] } = {
-    login: ['click', singleton.openLogin],
-    logout: ['click', singleton.logout]
-  };
-  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {
-    Object.keys(handlers).forEach(attr => {
-      if (el.dataset.mtAction === attr) {
-        el.addEventListener(...handlers[attr]);
-      }
-    });
+const parseSettings = (
+  el: HTMLInputElement | HTMLElement
+): { [key: string]: any } => {
+  let settings = {};
+  if (el.dataset.mtSettings) {
+    try {
+      settings = JSON5.parse(el.dataset.mtSettings);
+    } catch {
+      console.warn(`Malformed Midtype settings value.`);
+    }
+  }
+  return settings;
+};
+
+const register = async (el: HTMLElement) => {
+  const nodes = Array.from(
+    el.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
+  );
+  let emailInput: null | HTMLInputElement = null;
+  nodes.forEach((fieldNode: HTMLInputElement) => {
+    const fieldName = fieldNode.dataset.mtFormField;
+    if (fieldName && fieldName === 'email') {
+      emailInput = fieldNode;
+    }
   });
+  const settings = parseSettings(el);
+  let { confirmUserUrl, submitUrl } = settings;
+  if (!confirmUserUrl) {
+    const query = gql`
+      {
+        setting(key: "confirm_user_urls") {
+          key
+          value
+        }
+      }
+    `;
+    const res = await singleton.client.query({ query });
+    if (res.data && res.data.setting && res.data.setting.value.length) {
+      confirmUserUrl = res.data.setting.value[0];
+    }
+  }
+  const run = () => {
+    if (emailInput) {
+      const email = emailInput.value;
+      const mutation = gql`
+        mutation {
+          registerUser(input:{email: "${email}", url: "${confirmUserUrl}"}) {
+            success
+          }
+        }
+      `;
+      singleton.client
+        .mutate({ mutation })
+        .then(() => {
+          if (submitUrl) {
+            window.location.assign(submitUrl);
+          }
+        })
+        .catch(() => null);
+    }
+  };
+  const submit = el.querySelector<HTMLElement>('input[type="submit"]');
+  if (submit) {
+    submit.addEventListener('click', e => {
+      run();
+      e.preventDefault();
+    });
+  } else {
+    console.warn(
+      'User registration form must include <input type="submit"> button.'
+    );
+  }
+  if (!emailInput) {
+    console.warn(
+      `User registration forms must include an input for the email field.`
+    );
+  }
+};
+
+const handleActions = () => {
+  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {
+    switch (el.dataset.mtAction) {
+      case 'login':
+        el.addEventListener('click', singleton.openLogin);
+        break;
+      case 'logout':
+        el.addEventListener('click', singleton.logout);
+        break;
+      case 'register':
+        register(el);
+        break;
+      default:
+        console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
+    }
+  });
+  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {});
 };
 
 const handleHidden = () => {

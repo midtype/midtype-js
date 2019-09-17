@@ -57,5 +57,12 @@
         <img data-mt-field="image.location" data-mt-field-attribute="src" width="100" />
       </div>
     </div>
+    <form data-mt-action="register" data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'https://localhost:3000/test'}" data-mt-if-not="user">
+        <input
+          type="text"
+          data-mt-form-field="email"
+        />
+        <input type="submit" value="Sign Up" />
+      </form>
   </body>
 </html>
