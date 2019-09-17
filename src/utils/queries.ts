@@ -1,6 +1,8 @@
 import qs from 'query-string';
 
 import { setJWT } from './jwt';
+import { set } from './store';
+import { STORAGE_CONFIRM_TOKEN } from '../constants/identifiers';
 
 export const checkQueries = () => {
   const parsed = qs.parseUrl(window.location.href);
@@ -11,7 +13,8 @@ export const checkQueries = () => {
     hasQuery = true;
   }
   if (parsed.query.token) {
-    console.log(parsed.query.token as string);
+    const token = parsed.query.token as string;
+    set(STORAGE_CONFIRM_TOKEN, token);
     delete parsed.query.token;
     hasQuery = true;
   }

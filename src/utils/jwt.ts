@@ -1,14 +1,11 @@
-const STORAGE_KEY = `__mt:jwt`;
+import * as store from './store';
+
+const STORAGE_JWT = 'jwt';
 
 export const setJWT = (jwt: string) => {
-  window.localStorage.setItem(STORAGE_KEY, jwt);
+  store.set(STORAGE_JWT, jwt);
 };
 
-export const getJWT = (): string | null => {
-  return window.localStorage.getItem(STORAGE_KEY);
-};
+export const getJWT = (): string | null => store.get(STORAGE_JWT);
 
-export const clearJWT = (): void => {
-  window.localStorage.removeItem(STORAGE_KEY);
-  window.location.assign('/');
-};
+export const clearJWT = () => store.clear(STORAGE_JWT, '/');

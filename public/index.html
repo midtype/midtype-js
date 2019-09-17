@@ -24,6 +24,7 @@
   </head>
   <body>
     <button data-mt-action="login" data-mt-if-not="user">Login</button>
+    <button data-mt-action="logout" data-mt-if="user">Logout</button>
     <div data-mt-model="user" data-mt-if="user">
       <h1 data-mt-field="name"></h1>
       <span data-mt-field="email"></span>
@@ -57,12 +58,20 @@
         <img data-mt-field="image.location" data-mt-field-attribute="src" width="100" />
       </div>
     </div>
-    <form data-mt-action="register" data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'https://localhost:3000/test'}" data-mt-if-not="user">
-        <input
-          type="text"
-          data-mt-form-field="email"
-        />
-        <input type="submit" value="Sign Up" />
-      </form>
+    <form data-mt-action="register" data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'http://localhost:3000/test'}" data-mt-if-not="user">
+      <h2>Sign Up</h2>
+      <input type="text" data-mt-form-field="email" />
+      <input type="submit" value="Sign Up" />
+    </form>
+    <form data-mt-action="confirmUser">
+      <h2>Register</h2>
+      <h3>Name</h3>
+      <input type="text" data-mt-form-field="name" />
+      <h3>Password</h3>
+      <input type="password" data-mt-form-field="password" />
+      <h3>Confirm Password</h3>
+      <input type="password" />
+      <input type="submit" value="Register" />
+    </form>
   </body>
 </html>

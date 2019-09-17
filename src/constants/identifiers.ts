@@ -21,3 +21,5 @@ const WINDOW_OBJECT_ID = 'Midtype';
   logout: clearJWT
 };
 export const singleton: MidtypeObject = (window as any)[WINDOW_OBJECT_ID];
+
+export const STORAGE_CONFIRM_TOKEN = 'confirmToken';

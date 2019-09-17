@@ -205,6 +205,71 @@ const register = async (el: HTMLElement) => {
   }
 };
 
+const confirmUser = async (el: HTMLElement) => {
+  const nodes = Array.from(
+    el.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
+  );
+  let emailInput: null | HTMLInputElement = null;
+  nodes.forEach((fieldNode: HTMLInputElement) => {
+    const fieldName = fieldNode.dataset.mtFormField;
+    if (fieldName && fieldName === 'email') {
+      emailInput = fieldNode;
+    }
+  });
+  const settings = parseSettings(el);
+  let { confirmUserUrl, submitUrl } = settings;
+  if (!confirmUserUrl) {
+    const query = gql`
+      {
+        setting(key: "confirm_user_urls") {
+          key
+          value
+        }
+      }
+    `;
+    const res = await singleton.client.query({ query });
+    if (res.data && res.data.setting && res.data.setting.value.length) {
+      confirmUserUrl = res.data.setting.value[0];
+    }
+  }
+  const run = () => {
+    if (emailInput) {
+      const email = emailInput.value;
+      const mutation = gql`
+        mutation {
+          registerUser(input:{email: "${email}", url: "${confirmUserUrl}"}) {
+            success
+          }
+        }
+      `;
+      singleton.client
+        .mutate({ mutation })
+        .then(() => {
+          if (submitUrl) {
+            window.location.assign(submitUrl);
+          }
+        })
+        .catch(() => null);
+    }
+  };
+  const submit = el.querySelector<HTMLElement>('input[type="submit"]');
+  if (submit) {
+    submit.addEventListener('click', e => {
+      run();
+      e.preventDefault();
+    });
+  } else {
+    console.warn(
+      'User registration form must include <input type="submit"> button.'
+    );
+  }
+  if (!emailInput) {
+    console.warn(
+      `User registration forms must include an input for the email field.`
+    );
+  }
+};
+
 const handleActions = () => {
   document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {
     switch (el.dataset.mtAction) {
@@ -216,6 +281,9 @@ const handleActions = () => {
         break;
       case 'register':
         register(el);
+        break;
+      case 'confirmUser':
+        confirmUser(el);
         break;
       default:
         console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
