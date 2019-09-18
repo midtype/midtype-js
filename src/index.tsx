@@ -1,14 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import JSON5 from 'json5';
+import md5 from 'md5';
+import changeCase from 'change-case';
 import { ApolloProvider } from 'react-apollo';
 
 import pluralize from 'pluralize';
 import { gql } from 'apollo-boost';
 
 import client from './apollo/client';
-import { ROOT_ELEMENT_ID, singleton } from './constants/identifiers';
-import { getJWT } from './utils/jwt';
+import {
+  ROOT_ELEMENT_ID,
+  singleton,
+  STORAGE_CONFIRM_TOKEN
+} from './constants/identifiers';
+import { getJWT, setJWT } from './utils/jwt';
+import { get } from './utils/store';
 import { checkQueries } from './utils/queries';
 import {
   GET_CURRENT_USER,
@@ -24,105 +31,121 @@ const asyncForEach = async (array: any[], callback: any) => {
   }
 };
 
-const handleForms = async () =>
-  document.querySelectorAll<HTMLElement>('[data-mt-form]').forEach(node => {
-    const form = node.dataset.mtForm;
-    node
-      .querySelectorAll<HTMLElement>('[data-mt-form-field-type]')
-      .forEach(fieldNode => {
-        if (fieldNode.dataset.mtFormFieldType === 'user') {
-          fieldNode.style.display = 'none';
-        }
-      });
-    const run = async () => {
-      const fields: Array<[string, string | boolean | number]> = [];
-      const nodes = Array.from(
-        node.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
-      );
-      await asyncForEach(nodes, async (fieldNode: HTMLInputElement) => {
-        const fieldName = fieldNode.dataset.mtFormField;
-        const fieldType = fieldNode.dataset.mtFormFieldType;
-        if (fieldName) {
-          switch (fieldType) {
-            case 'user': {
-              if (singleton.user) {
-                fields.push([fieldName, singleton.user.id]);
-              }
-              break;
+const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
+  const form = name || el.dataset[changeCase.camel(`mt-${prefix}`)];
+  el.querySelectorAll<HTMLElement>(`[data-mt-${prefix}-field-type]`).forEach(
+    fieldNode => {
+      const type =
+        fieldNode.dataset[changeCase.camel(`mt-${prefix}-field-type`)];
+      if (type && type.startsWith('user.')) {
+        fieldNode.style.display = 'none';
+      }
+    }
+  );
+  return async () => {
+    const fields: Array<[string, string | boolean | number]> = [];
+    const nodes = Array.from(
+      el.querySelectorAll<HTMLInputElement>(`[data-mt-${prefix}-field]`)
+    );
+    await asyncForEach(nodes, async (fieldNode: HTMLInputElement) => {
+      const fieldName =
+        fieldNode.dataset[changeCase.camel(`mt-${prefix}-field`)];
+      const fieldType =
+        fieldNode.dataset[changeCase.camel(`mt-${prefix}-field-type`)];
+      if (fieldName) {
+        const type = fieldType ? fieldType.split('.')[0] : null;
+        switch (type) {
+          case 'user': {
+            if (singleton.user) {
+              fields.push([
+                fieldName,
+                accessValue({ user: singleton.user }, fieldType || '')
+              ]);
             }
-            case 'boolean':
-              fields.push([fieldName, fieldNode.checked ? true : false]);
-              break;
-            case 'number':
-              fields.push([fieldName, parseFloat(fieldNode.value) || 0]);
-              break;
-            case 'asset':
-              const file = (fieldNode as any).files[0];
-              const body = new FormData();
-              body.append('asset', file);
-              const asset = await fetch('https://api.midtype.com/upload', {
-                method: 'POST',
-                body,
-                headers: { Authorization: `Bearer ${getJWT()}` }
-              }).then(res => res.json());
-              if (asset) {
-                fields.push([fieldName, asset.asset_id]);
-              } else {
-                console.warn(`Invalid asset uploaded for field ${fieldName}.`);
-              }
-              break;
-            default:
-              fields.push([fieldName, fieldNode.value]);
+            break;
           }
+          case 'boolean':
+            fields.push([fieldName, fieldNode.checked ? true : false]);
+            break;
+          case 'number':
+            fields.push([fieldName, parseFloat(fieldNode.value) || 0]);
+            break;
+          case 'asset':
+            const file = (fieldNode as any).files[0];
+            const body = new FormData();
+            body.append('asset', file);
+            const asset = await fetch('https://api.midtype.com/upload', {
+              method: 'POST',
+              body,
+              headers: { Authorization: `Bearer ${getJWT()}` }
+            }).then(res => res.json());
+            if (asset) {
+              fields.push([fieldName, asset.asset_id]);
+            } else {
+              console.warn(`Invalid asset uploaded for field ${fieldName}.`);
+            }
+            break;
+          default:
+            fields.push([fieldName, fieldNode.value]);
         }
-      });
-      if (form) {
-        const mutation = node.dataset.mtFormId
-          ? gql`
+      }
+    });
+    if (form) {
+      const mutation = el.dataset.mtFormId
+        ? gql`
         mutation {
-          update${uppercase(pluralize.singular(form))}(input: { id: "${
-              node.dataset.mtFormId
-            }", patch: { ${fields
-              .map(
-                field =>
-                  `${field[0]}: ${
-                    typeof field[1] === 'string' ? `"${field[1]}"` : field[1]
-                  }`
-              )
-              .join(', ')} } }) {
+          update${uppercase(
+            pluralize.singular(changeCase.camel(form))
+          )}(input: { id: "${el.dataset.mtFormId}", patch: { ${fields
+            .map(
+              field =>
+                `${field[0]}: ${
+                  typeof field[1] === 'string' ? `"${field[1]}"` : field[1]
+                }`
+            )
+            .join(', ')} } }) {
             clientMutationId
           }
         }`
-          : gql`
+        : gql`
         mutation {
           create${uppercase(
-            pluralize.singular(form)
+            pluralize.singular(changeCase.camel(form))
           )}(input: { ${form}: { ${fields
-              .map(
-                field =>
-                  `${field[0]}: ${
-                    typeof field[1] === 'string' ? `"${field[1]}"` : field[1]
-                  }`
-              )
-              .join(', ')} } }) {
+            .map(
+              field =>
+                `${field[0]}: ${
+                  typeof field[1] === 'string' ? `"${field[1]}"` : field[1]
+                }`
+            )
+            .join(', ')} } }) {
             clientMutationId
           }
         }
       `;
-        singleton.client
-          .mutate({
-            mutation
-          })
-          .then(handleData)
-          .catch(() => null);
-      }
-    };
-    const submit = node.querySelector<HTMLElement>('input[type="submit"]');
+      singleton.client
+        .mutate({
+          mutation
+        })
+        .then(handleData)
+        .catch(() => null);
+    }
+  };
+};
+
+const handleForms = async () =>
+  document.querySelectorAll<HTMLFormElement>('[data-mt-form]').forEach(el => {
+    const run = parseForm(el, 'form');
+    const submit = el.querySelector<HTMLElement>('input[type="submit"]');
     if (submit) {
       submit.addEventListener('click', e => {
         run();
         e.preventDefault();
       });
+    } else {
+      console.warn(
+        `${el.dataset.mtForm} form must include <input type="submit"> button.`
+      );
     }
   });
 
@@ -141,16 +164,9 @@ const parseSettings = (
 };
 
 const register = async (el: HTMLElement) => {
-  const nodes = Array.from(
-    el.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
+  const email = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="email"]'
   );
-  let emailInput: null | HTMLInputElement = null;
-  nodes.forEach((fieldNode: HTMLInputElement) => {
-    const fieldName = fieldNode.dataset.mtFormField;
-    if (fieldName && fieldName === 'email') {
-      emailInput = fieldNode;
-    }
-  });
   const settings = parseSettings(el);
   let { confirmUserUrl, submitUrl } = settings;
   if (!confirmUserUrl) {
@@ -168,17 +184,19 @@ const register = async (el: HTMLElement) => {
     }
   }
   const run = () => {
-    if (emailInput) {
-      const email = emailInput.value;
+    if (email) {
       const mutation = gql`
-        mutation {
-          registerUser(input:{email: "${email}", url: "${confirmUserUrl}"}) {
+        mutation RegisterUser($email: String!, $url: String!) {
+          registerUser(input: { email: $email, url: $url }) {
             success
           }
         }
       `;
       singleton.client
-        .mutate({ mutation })
+        .mutate({
+          mutation,
+          variables: { email: email.value, url: confirmUserUrl }
+        })
         .then(() => {
           if (submitUrl) {
             window.location.assign(submitUrl);
@@ -198,7 +216,7 @@ const register = async (el: HTMLElement) => {
       'User registration form must include <input type="submit"> button.'
     );
   }
-  if (!emailInput) {
+  if (!email) {
     console.warn(
       `User registration forms must include an input for the email field.`
     );
@@ -206,50 +224,62 @@ const register = async (el: HTMLElement) => {
 };
 
 const confirmUser = async (el: HTMLElement) => {
-  const nodes = Array.from(
-    el.querySelectorAll<HTMLInputElement>('[data-mt-form-field]')
+  const name = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="name"]'
   );
-  let emailInput: null | HTMLInputElement = null;
-  nodes.forEach((fieldNode: HTMLInputElement) => {
-    const fieldName = fieldNode.dataset.mtFormField;
-    if (fieldName && fieldName === 'email') {
-      emailInput = fieldNode;
-    }
-  });
-  const settings = parseSettings(el);
-  let { confirmUserUrl, submitUrl } = settings;
-  if (!confirmUserUrl) {
-    const query = gql`
-      {
-        setting(key: "confirm_user_urls") {
-          key
-          value
-        }
-      }
-    `;
-    const res = await singleton.client.query({ query });
-    if (res.data && res.data.setting && res.data.setting.value.length) {
-      confirmUserUrl = res.data.setting.value[0];
-    }
-  }
+  const pw = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="password"]'
+  );
+  const pwConfirm = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="passwordConfirm"]'
+  );
+  const metadata = el.querySelector<HTMLElement>('[data-mt-action-form-model]');
+  const handleMetadata = metadata
+    ? parseForm(metadata, 'action-form', metadata.dataset.mtActionFormModel)
+    : () => null;
   const run = () => {
-    if (emailInput) {
-      const email = emailInput.value;
+    if (!pw) {
+      console.warn(`No password input in confirmUser form.`);
+      return;
+    }
+    const match = pwConfirm ? pwConfirm.value === pw.value : true;
+    if (match && name) {
       const mutation = gql`
-        mutation {
-          registerUser(input:{email: "${email}", url: "${confirmUserUrl}"}) {
-            success
+        mutation ConfirmUser(
+          $name: String!
+          $token: String!
+          $password: String!
+        ) {
+          confirmUser(
+            input: { name: $name, token: $token, password: $password }
+          ) {
+            jwtToken
           }
         }
       `;
+      const variables = {
+        name: name.value,
+        password: md5(pw.value),
+        token: get(STORAGE_CONFIRM_TOKEN)
+      };
       singleton.client
-        .mutate({ mutation })
-        .then(() => {
-          if (submitUrl) {
-            window.location.assign(submitUrl);
+        .mutate({ mutation, variables })
+        .then(res => {
+          if (
+            res.data &&
+            res.data.confirmUser &&
+            res.data.confirmUser.jwtToken
+          ) {
+            setJWT(res.data.confirmUser.jwtToken);
+            return getUser();
+          } else {
+            return Promise.resolve();
           }
         })
-        .catch(() => null);
+        .then(() => {
+          handleMetadata();
+        })
+        .catch(e => console.log(e));
     }
   };
   const submit = el.querySelector<HTMLElement>('input[type="submit"]');
@@ -260,35 +290,50 @@ const confirmUser = async (el: HTMLElement) => {
     });
   } else {
     console.warn(
-      'User registration form must include <input type="submit"> button.'
+      'Confirm user form must include <input type="submit"> button.'
     );
   }
-  if (!emailInput) {
-    console.warn(
-      `User registration forms must include an input for the email field.`
-    );
+  if (!pw) {
+    console.warn(`No password input in confirmUser form.`);
+    return;
   }
 };
 
 const handleActions = () => {
-  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {
-    switch (el.dataset.mtAction) {
-      case 'login':
-        el.addEventListener('click', singleton.openLogin);
-        break;
-      case 'logout':
-        el.addEventListener('click', singleton.logout);
-        break;
-      case 'register':
-        register(el);
-        break;
-      case 'confirmUser':
-        confirmUser(el);
-        break;
-      default:
-        console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
-    }
-  });
+  document
+    .querySelectorAll<HTMLButtonElement>('button[data-mt-action]')
+    .forEach(el => {
+      switch (el.dataset.mtAction) {
+        case 'login':
+          el.addEventListener('click', singleton.openLogin);
+          break;
+        case 'logout':
+          el.addEventListener('click', singleton.logout);
+          break;
+        default:
+          console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
+      }
+    });
+  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {});
+};
+
+const handleActionForms = () => {
+  document
+    .querySelectorAll<HTMLFormElement>('form[data-mt-action-form]')
+    .forEach(el => {
+      switch (el.dataset.mtActionForm) {
+        case 'register':
+          register(el);
+          break;
+        case 'confirmUser':
+          confirmUser(el);
+          break;
+        default:
+          console.warn(
+            `Unrecognized Midtype action form: ${el.dataset.mtAction}`
+          );
+      }
+    });
   document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {});
 };
 
@@ -400,8 +445,10 @@ const handleData = () => {
     } else if (name && model.dataset.mtModelId) {
       const fields = getModelFields(model);
       const query = gql`
-        query Get${uppercase(pluralize.singular(name))}($id: UUID!) {
-          ${pluralize.singular(name)}(id: $id) {
+        query Get${uppercase(
+          pluralize.singular(changeCase.camel(name))
+        )}($id: UUID!) {
+          ${pluralize.singular(changeCase.camel(name))}(id: $id) {
             ${parsedFieldToQuery(fields)}        
           }
         }`;
@@ -412,8 +459,8 @@ const handleData = () => {
           fetchPolicy: 'network-only'
         })
         .then(({ data }) => {
-          if (data && data[pluralize.singular(name)]) {
-            const node = data[pluralize.singular(name)];
+          if (data && data[pluralize.singular(changeCase.camel(name))]) {
+            const node = data[pluralize.singular(changeCase.camel(name))];
             model.style.visibility = 'visible';
             model
               .querySelectorAll<HTMLElement>('[data-mt-field]')
@@ -441,8 +488,8 @@ const handleData = () => {
     if (name && model) {
       const fields = getModelFields(model);
       const query = gql`
-        query Get${uppercase(pluralize(name))} {
-          ${pluralize(name)} {
+        query Get${uppercase(pluralize(changeCase.camel(name)))} {
+          ${pluralize(changeCase.camel(name))} {
             nodes {
               ${parsedFieldToQuery(fields)}        
             }
@@ -451,8 +498,8 @@ const handleData = () => {
       singleton.client
         .query({ query, fetchPolicy: 'network-only' })
         .then(({ data }) => {
-          if (data && data[pluralize(name)].nodes) {
-            const nodes = data[pluralize(name)].nodes;
+          if (data && data[pluralize(changeCase.camel(name))].nodes) {
+            const nodes = data[pluralize(changeCase.camel(name))].nodes;
             const newEls: HTMLElement[] = [];
             nodes.forEach((node: any) => {
               const newNode = model.cloneNode(true);
@@ -508,6 +555,7 @@ const handleData = () => {
 
 const attachHandlers = () => {
   handleActions();
+  handleActionForms();
   if (getJWT()) {
     handleForms();
     handleData();
@@ -516,7 +564,7 @@ const attachHandlers = () => {
 
 const getUser = () => {
   if (getJWT()) {
-    singleton.client
+    return singleton.client
       .query({
         query: singleton.config.stripe
           ? GET_CURRENT_USER_WITH_STRIPE
@@ -526,9 +574,9 @@ const getUser = () => {
         singleton.user = data.currentUser;
         handleHidden();
       });
-  } else {
-    handleHidden();
   }
+  handleHidden();
+  return Promise.resolve();
 };
 
 singleton.init = (config: IUniverseConfig) => {

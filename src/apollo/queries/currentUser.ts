@@ -4,9 +4,11 @@ export const GET_CURRENT_USER = gql`
   query GetCurrentUser {
     currentUser {
       id
-      name
-      email
-      photoUrl
+      private {
+        name
+        email
+        photoUrl
+      }
     }
   }
 `;
@@ -15,9 +17,11 @@ export const GET_CURRENT_USER_WITH_STRIPE = gql`
   query GetCurrentUser {
     currentUser {
       id
-      name
-      email
-      photoUrl
+      private {
+        name
+        email
+        photoUrl
+      }
       stripeSubscriptionBySubscriberId {
         active
         id

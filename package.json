@@ -5,6 +5,7 @@
   "dependencies": {
     "@types/change-case": "^2.3.1",
     "@types/json5": "^0.0.30",
+    "@types/md5": "^2.1.33",
     "@types/pluralize": "^0.0.29",
     "@types/react-stripe-elements": "^1.3.0",
     "apollo-boost": "^0.4.2",
@@ -12,6 +13,7 @@
     "dateformat": "^3.0.3",
     "graphql": "^14.3.1",
     "json5": "^2.1.0",
+    "md5": "^2.2.1",
     "pluralize": "^8.0.0",
     "query-string": "^6.8.2",
     "react": "^16.8.6",

@@ -25,11 +25,11 @@
   <body>
     <button data-mt-action="login" data-mt-if-not="user">Login</button>
     <button data-mt-action="logout" data-mt-if="user">Logout</button>
-    <div data-mt-model="user" data-mt-if="user">
-      <h1 data-mt-field="name"></h1>
-      <span data-mt-field="email"></span>
-      <img data-mt-field="photoUrl" data-mt-field-attribute="src" width="100" />
-    </div>
+    <!-- <div data-mt-model="user" data-mt-if="user">
+      <h1 data-mt-field="private.name"></h1>
+      <span data-mt-field="private.email"></span>
+      <img data-mt-field="private.photoUrl" data-mt-field-attribute="src" width="100" />
+    </div> -->
     <form data-mt-form="timer" data-mt-if="user">
       <input
         type="text"
@@ -50,27 +50,49 @@
       />
       <input type="submit" value="Submit" />
     </form>
-    <div data-mt-nodes="timer" data-mt-if="user">
+    <!-- <div data-mt-nodes="timer" data-mt-if="user">
       <div>
         <hr />
         <h3><span data-mt-field="newField"></span></h1>
-        <p data-mt-field="owner.name"></p>
+        <p data-mt-field="owner.private.name"></p>
         <img data-mt-field="image.location" data-mt-field-attribute="src" width="100" />
       </div>
-    </div>
-    <form data-mt-action="register" data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'http://localhost:3000/test'}" data-mt-if-not="user">
+    </div> -->
+    <form
+      data-mt-action-form="register"
+      data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'http://localhost:3000/test'}"
+      data-mt-if-not="user"
+    >
       <h2>Sign Up</h2>
-      <input type="text" data-mt-form-field="email" />
+      <input type="text" data-mt-action-form-field="email" />
       <input type="submit" value="Sign Up" />
     </form>
-    <form data-mt-action="confirmUser">
+    <form data-mt-action-form="confirmUser">
       <h2>Register</h2>
       <h3>Name</h3>
-      <input type="text" data-mt-form-field="name" />
+      <input type="text" data-mt-action-form-field="name" />
       <h3>Password</h3>
-      <input type="password" data-mt-form-field="password" />
+      <input type="password" data-mt-action-form-field="password" />
       <h3>Confirm Password</h3>
-      <input type="password" />
+      <input type="password" data-mt-action-formfield="passwordConfirm" />
+      <div data-mt-action-form-model="preference">
+        <input
+          type="text"
+          data-mt-action-form-field="displayName"
+          data-mt-action-form-field-type="user.private.name"
+        />
+        <h3>Age</h3>
+        <input
+          type="text"
+          data-mt-action-form-field="age"
+          data-mt-action-form-field-type="number"
+        />
+        <input
+          type="text"
+          data-mt-action-form-field="userId"
+          data-mt-action-form-field-type="user.id"
+        />
+      </div>
       <input type="submit" value="Register" />
     </form>
   </body>
