@@ -14,9 +14,9 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         Midtype.init({
-          projectName: 'foo1',
-          redirectUrl: 'http://localhost:3000/login',
-          projectId: 51,
+          projectName: 'foo1-staging',
+          redirectUrl: 'https://midtype.webflow.io/profile',
+          projectId: 71, // 109
           stripe: false
         });
       });
@@ -30,26 +30,19 @@
       <span data-mt-field="private.email"></span>
       <img data-mt-field="private.photoUrl" data-mt-field-attribute="src" width="100" />
     </div> -->
-    <form data-mt-form="timer" data-mt-if="user">
-      <input
-        type="text"
-        data-mt-form-field="ownerId"
-        data-mt-form-field-type="user"
-      />
-      <input type="text" data-mt-form-field="newField" />
-      <input
-        type="file"
-        accept="image/png, image/jpeg"
-        data-mt-form-field="imageId"
-        data-mt-form-field-type="asset"
-      />
-      <input
-        type="checkbox"
-        data-mt-form-field="length"
-        data-mt-form-field-type="boolean"
-      />
-      <input type="submit" value="Submit" />
-    </form>
+    <div data-mt-model="user" data-mt-if="user">
+      <h1 data-mt-field="private.name"></h1>
+      <span data-mt-field="metadatumByUserId.id"></span>
+      <span data-mt-field="metadatumByUserId.displayName"></span>
+      <form
+        data-mt-form="metadatum"
+        data-mt-form-id-value="metadatumByUserId.id"
+        data-mt-settings="{submitUrl: 'https://midtype.webflow.io/sign-up/email-confirmation'}"
+      >
+        <input type="text" data-mt-form-field="country" />
+        <input type="submit" value="Update" />
+      </form>
+    </div>
     <!-- <div data-mt-nodes="timer" data-mt-if="user">
       <div>
         <hr />
@@ -59,15 +52,19 @@
       </div>
     </div> -->
     <form
-      data-mt-action-form="register"
-      data-mt-settings="{confirmUserUrl:'http://localhost:3000/verify', submitUrl: 'http://localhost:3000/test'}"
-      data-mt-if-not="user"
+      data-mt-action-form="signup"
+      data-mt-settings="{confirmUserUrl:'https://midtype.webflow.io/sign-up/sign-up-free', submitUrl: 'https://midtype.webflow.io/sign-up/email-confirmation'}"
+      data-mt-if-not="user,token"
     >
       <h2>Sign Up</h2>
       <input type="text" data-mt-action-form-field="email" />
       <input type="submit" value="Sign Up" />
     </form>
-    <form data-mt-action-form="confirmUser">
+    <form
+      data-mt-action-form="createUser"
+      data-mt-if-not="user"
+      data-mt-if="token"
+    >
       <h2>Register</h2>
       <h3>Name</h3>
       <input type="text" data-mt-action-form-field="name" />
@@ -75,17 +72,11 @@
       <input type="password" data-mt-action-form-field="password" />
       <h3>Confirm Password</h3>
       <input type="password" data-mt-action-formfield="passwordConfirm" />
-      <div data-mt-action-form-model="preference">
+      <div data-mt-action-form-model="metadatum">
         <input
           type="text"
           data-mt-action-form-field="displayName"
           data-mt-action-form-field-type="user.private.name"
-        />
-        <h3>Age</h3>
-        <input
-          type="text"
-          data-mt-action-form-field="age"
-          data-mt-action-form-field-type="number"
         />
         <input
           type="text"
@@ -94,6 +85,16 @@
         />
       </div>
       <input type="submit" value="Register" />
+    </form>
+    <form
+      data-mt-action-form="login"
+      data-mt-if-not="user"
+      data-mt-settings="{submitUrl: 'http://localhost:3000/profile'}"
+    >
+      <h2>Sign In</h2>
+      <input type="text" data-mt-action-form-field="email" />
+      <input type="password" data-mt-action-form-field="password" />
+      <input type="submit" value="Sign In" />
     </form>
   </body>
 </html>

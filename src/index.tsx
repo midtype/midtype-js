@@ -24,10 +24,27 @@ import {
 
 import App from './App';
 
+const MT_FORM_ID = 'mtFormId';
+
 const uppercase = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 const asyncForEach = async (array: any[], callback: any) => {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
+  }
+};
+
+const parseFormId = (el: HTMLElement) => {
+  return el.dataset.mtFormId;
+};
+
+const postSubmitAction = (el: HTMLElement) => {
+  if (el.dataset.redirect) {
+    window.location.assign(el.dataset.redirect);
+  } else {
+    const settings = parseSettings(el);
+    if (settings.submitUrl) {
+      window.location.assign(settings.submitUrl);
+    }
   }
 };
 
@@ -91,12 +108,13 @@ const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
       }
     });
     if (form) {
-      const mutation = el.dataset.mtFormId
+      const id = parseFormId(el);
+      const mutation = id
         ? gql`
         mutation {
           update${uppercase(
             pluralize.singular(changeCase.camel(form))
-          )}(input: { id: "${el.dataset.mtFormId}", patch: { ${fields
+          )}(input: { id: "${id}", patch: { ${fields
             .map(
               field =>
                 `${field[0]}: ${
@@ -128,6 +146,7 @@ const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
           mutation
         })
         .then(handleData)
+        .then(() => postSubmitAction(el))
         .catch(() => null);
     }
   };
@@ -163,31 +182,30 @@ const parseSettings = (
   return settings;
 };
 
-const register = async (el: HTMLElement) => {
+const verifyEmail = async (el: HTMLElement) => {
   const email = el.querySelector<HTMLInputElement>(
     'input[data-mt-action-form-field="email"]'
   );
-  const settings = parseSettings(el);
-  let { confirmUserUrl, submitUrl } = settings;
+  let { confirmUserUrl } = parseSettings(el);
   if (!confirmUserUrl) {
     const query = gql`
       {
-        setting(key: "confirm_user_urls") {
+        mSetting(key: "confirm_user_urls") {
           key
           value
         }
       }
     `;
     const res = await singleton.client.query({ query });
-    if (res.data && res.data.setting && res.data.setting.value.length) {
-      confirmUserUrl = res.data.setting.value[0];
+    if (res.data && res.data.mSetting && res.data.mSetting.value.length) {
+      confirmUserUrl = res.data.mSetting.value[0];
     }
   }
   const run = () => {
     if (email) {
       const mutation = gql`
-        mutation RegisterUser($email: String!, $url: String!) {
-          registerUser(input: { email: $email, url: $url }) {
+        mutation VerifyEmail($email: String!, $url: String!) {
+          mCheckEmail(input: { email: $email, url: $url }) {
             success
           }
         }
@@ -197,11 +215,7 @@ const register = async (el: HTMLElement) => {
           mutation,
           variables: { email: email.value, url: confirmUserUrl }
         })
-        .then(() => {
-          if (submitUrl) {
-            window.location.assign(submitUrl);
-          }
-        })
+        .then(() => postSubmitAction(el))
         .catch(() => null);
     }
   };
@@ -213,17 +227,17 @@ const register = async (el: HTMLElement) => {
     });
   } else {
     console.warn(
-      'User registration form must include <input type="submit"> button.'
+      'User email verification form must include <input type="submit"> button.'
     );
   }
   if (!email) {
     console.warn(
-      `User registration forms must include an input for the email field.`
+      `User email verification forms must include an input for the email field.`
     );
   }
 };
 
-const confirmUser = async (el: HTMLElement) => {
+const createUser = async (el: HTMLElement) => {
   const name = el.querySelector<HTMLInputElement>(
     'input[data-mt-action-form-field="name"]'
   );
@@ -239,18 +253,18 @@ const confirmUser = async (el: HTMLElement) => {
     : () => null;
   const run = () => {
     if (!pw) {
-      console.warn(`No password input in confirmUser form.`);
+      console.warn(`No password input in create user form.`);
       return;
     }
     const match = pwConfirm ? pwConfirm.value === pw.value : true;
     if (match && name) {
       const mutation = gql`
-        mutation ConfirmUser(
+        mutation CreateUser(
           $name: String!
           $token: String!
           $password: String!
         ) {
-          confirmUser(
+          createMUser(
             input: { name: $name, token: $token, password: $password }
           ) {
             jwtToken
@@ -267,10 +281,10 @@ const confirmUser = async (el: HTMLElement) => {
         .then(res => {
           if (
             res.data &&
-            res.data.confirmUser &&
-            res.data.confirmUser.jwtToken
+            res.data.createMUser &&
+            res.data.createMUser.jwtToken
           ) {
-            setJWT(res.data.confirmUser.jwtToken);
+            setJWT(res.data.createMUser.jwtToken);
             return getUser();
           } else {
             return Promise.resolve();
@@ -279,6 +293,7 @@ const confirmUser = async (el: HTMLElement) => {
         .then(() => {
           handleMetadata();
         })
+        .then(() => postSubmitAction(el))
         .catch(e => console.log(e));
     }
   };
@@ -289,12 +304,64 @@ const confirmUser = async (el: HTMLElement) => {
       e.preventDefault();
     });
   } else {
-    console.warn(
-      'Confirm user form must include <input type="submit"> button.'
-    );
+    console.warn('Create user form must include <input type="submit"> button.');
   }
   if (!pw) {
-    console.warn(`No password input in confirmUser form.`);
+    console.warn(`No password input in create user form.`);
+    return;
+  }
+};
+
+const authenticate = async (el: HTMLElement) => {
+  const email = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="email"]'
+  );
+  const pw = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="password"]'
+  );
+  const run = () => {
+    if (!pw || !email) {
+      return;
+    }
+    const mutation = gql`
+      mutation Authenticate($email: String!, $password: String!) {
+        mAuthenticate(input: { email: $email, password: $password }) {
+          jwtToken
+        }
+      }
+    `;
+    const variables = {
+      email: email.value,
+      password: md5(pw.value)
+    };
+    singleton.client
+      .mutate({ mutation, variables })
+      .then(res => {
+        if (
+          res.data &&
+          res.data.mAuthenticate &&
+          res.data.mAuthenticate.jwtToken
+        ) {
+          setJWT(res.data.mAuthenticate.jwtToken);
+          return getUser();
+        } else {
+          return Promise.resolve();
+        }
+      })
+      .then(() => postSubmitAction(el))
+      .catch(e => console.log(e));
+  };
+  const submit = el.querySelector<HTMLElement>('input[type="submit"]');
+  if (submit) {
+    submit.addEventListener('click', e => {
+      run();
+      e.preventDefault();
+    });
+  } else {
+    console.warn('Create user form must include <input type="submit"> button.');
+  }
+  if (!pw || !email) {
+    console.warn(`No password input in sign in form.`);
     return;
   }
 };
@@ -314,7 +381,6 @@ const handleActions = () => {
           console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
       }
     });
-  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {});
 };
 
 const handleActionForms = () => {
@@ -322,11 +388,14 @@ const handleActionForms = () => {
     .querySelectorAll<HTMLFormElement>('form[data-mt-action-form]')
     .forEach(el => {
       switch (el.dataset.mtActionForm) {
-        case 'register':
-          register(el);
+        case 'signup':
+          verifyEmail(el);
           break;
-        case 'confirmUser':
-          confirmUser(el);
+        case 'createUser':
+          createUser(el);
+          break;
+        case 'login':
+          authenticate(el);
           break;
         default:
           console.warn(
@@ -334,36 +403,45 @@ const handleActionForms = () => {
           );
       }
     });
-  document.querySelectorAll<HTMLElement>('[data-mt-action]').forEach(el => {});
 };
 
+const checkIfExists = (key: string) =>
+  (singleton as any)[key] || (singleton as any).data[key] || get(key)
+    ? true
+    : false;
+
 const handleHidden = () => {
-  document.querySelectorAll<HTMLElement>('[data-mt-if-not]').forEach(el => {
-    if (el.dataset.mtIfNot) {
-      const check = (singleton as any)[el.dataset.mtIfNot] ? true : false;
-      if (!check) {
+  document
+    .querySelectorAll<HTMLElement>('[data-mt-if-not], [data-mt-if]')
+    .forEach(el => {
+      let visible = false;
+      if (el.dataset.mtIfNot && el.dataset.mtIf) {
+        const idsIf = el.dataset.mtIf.split(',').map(id => id.trim());
+        const idsIfNot = el.dataset.mtIfNot.split(',').map(id => id.trim());
+        visible =
+          idsIf.every(id => checkIfExists(id)) &&
+          idsIfNot.every(id => checkIfExists(id) === false);
+      } else if (el.dataset.mtIfNot) {
+        const ids = el.dataset.mtIfNot.split(',').map(id => id.trim());
+        visible = ids.every(id => checkIfExists(id) === false);
+      } else if (el.dataset.mtIf) {
+        const ids = el.dataset.mtIf.split(',').map(id => id.trim());
+        visible = ids.every(id => checkIfExists(id));
+      }
+      if (visible) {
         el.style.visibility = 'visible';
       } else {
         el.style.display = 'none';
       }
-    }
-  });
-  document.querySelectorAll<HTMLElement>('[data-mt-if]').forEach(el => {
-    if (el.dataset.mtIf) {
-      const check = (singleton as any)[el.dataset.mtIf] ? false : true;
-      if (!check) {
-        el.style.visibility = 'visible';
-      } else {
-        el.style.display = 'none';
-      }
-    }
-  });
+    });
 };
 
 const parseField = (name: string, fields: any) => {
   const split = name.split('.');
   fields[split[0]] =
-    split.length > 1 ? parseField(split.slice(1).join('.'), {}) : null;
+    split.length > 1
+      ? parseField(split.slice(1).join('.'), fields[split[0]] || {})
+      : null;
   return fields;
 };
 
@@ -391,17 +469,24 @@ const getModelFields = (el: HTMLElement) => {
     ? [el]
     : Array.from(
         el.querySelectorAll<HTMLElement>(
-          '[data-mt-field], [data-mt-form-field-value]'
+          '[data-mt-field], [data-mt-form-field-value], [data-mt-form-id-value]'
         )
       );
   els.forEach(field => {
-    const fieldName = field.dataset.mtField;
-    const fieldValue = field.dataset.mtFormFieldValue;
-    if (fieldName) {
-      fields = { ...fields, ...parseField(fieldName, {}) };
+    if (field.dataset.mtField) {
+      fields = { ...fields, ...parseField(field.dataset.mtField, fields) };
     }
-    if (fieldValue) {
-      fields = { ...fields, ...parseField(fieldValue, {}) };
+    if (field.dataset.mtFormFieldValue) {
+      fields = {
+        ...fields,
+        ...parseField(field.dataset.mtFormFieldValue, fields)
+      };
+    }
+    if (field.dataset.mtFormIdValue) {
+      fields = {
+        ...fields,
+        ...parseField(field.dataset.mtFormIdValue, fields)
+      };
     }
   });
   if (fields.id !== null) {
@@ -413,38 +498,18 @@ const getModelFields = (el: HTMLElement) => {
 const handleData = () => {
   document.querySelectorAll<HTMLElement>('[data-mt-model]').forEach(model => {
     const name = model.dataset.mtModel;
+    const fields = getModelFields(model);
+    let query;
+    let variables = {};
     if (name === 'user') {
-      singleton.client
-        .query({
-          query: singleton.config.stripe
-            ? GET_CURRENT_USER_WITH_STRIPE
-            : GET_CURRENT_USER
-        })
-        .then(({ data }) => {
-          if (data && data.currentUser) {
-            model.style.visibility = 'visible';
-            model
-              .querySelectorAll<HTMLElement>('[data-mt-field]')
-              .forEach(fieldNode => {
-                const fieldName = fieldNode.dataset.mtField;
-                if (fieldName) {
-                  const fieldValue = accessValue(data.currentUser, fieldName);
-                  if (fieldNode.dataset.mtFieldAttribute) {
-                    fieldNode.setAttribute(
-                      fieldNode.dataset.mtFieldAttribute,
-                      fieldValue
-                    );
-                  } else {
-                    fieldNode.innerHTML = fieldValue;
-                  }
-                }
-              });
+      query = gql`
+        query {
+          mUserInSession {
+            ${parsedFieldToQuery(fields)}        
           }
-        })
-        .catch(() => null);
+        }`;
     } else if (name && model.dataset.mtModelId) {
-      const fields = getModelFields(model);
-      const query = gql`
+      query = gql`
         query Get${uppercase(
           pluralize.singular(changeCase.camel(name))
         )}($id: UUID!) {
@@ -452,15 +517,18 @@ const handleData = () => {
             ${parsedFieldToQuery(fields)}        
           }
         }`;
+      variables = { id: model.dataset.mtModelId };
+    }
+    if (query && name) {
+      const key =
+        name === 'user'
+          ? 'mUserInSession'
+          : pluralize.singular(changeCase.camel(name));
       singleton.client
-        .query({
-          query,
-          variables: { id: model.dataset.mtModelId },
-          fetchPolicy: 'network-only'
-        })
+        .query({ query, variables })
         .then(({ data }) => {
-          if (data && data[pluralize.singular(changeCase.camel(name))]) {
-            const node = data[pluralize.singular(changeCase.camel(name))];
+          if (data && data[key]) {
+            const node = data[key];
             model.style.visibility = 'visible';
             model
               .querySelectorAll<HTMLElement>('[data-mt-field]')
@@ -478,8 +546,18 @@ const handleData = () => {
                   }
                 }
               });
+            model
+              .querySelectorAll<HTMLInputElement>('[data-mt-form-id-value]')
+              .forEach(fieldNode => {
+                const fieldName = fieldNode.dataset.mtFormIdValue;
+                if (fieldName) {
+                  const fieldValue = accessValue(node, fieldName);
+                  fieldNode.dataset[MT_FORM_ID] = fieldValue;
+                }
+              });
           }
-        });
+        })
+        .catch(() => null);
     }
   });
   document.querySelectorAll<HTMLElement>('[data-mt-nodes]').forEach(root => {
@@ -491,7 +569,7 @@ const handleData = () => {
         query Get${uppercase(pluralize(changeCase.camel(name)))} {
           ${pluralize(changeCase.camel(name))} {
             nodes {
-              ${parsedFieldToQuery(fields)}        
+              ${parsedFieldToQuery(fields)}
             }
           }
         }`;
@@ -541,6 +619,15 @@ const handleData = () => {
                       fieldNode.value = fieldValue;
                     }
                   });
+                newEl
+                  .querySelectorAll<HTMLInputElement>('[data-mt-form-id-value]')
+                  .forEach(fieldNode => {
+                    const fieldName = fieldNode.dataset.mtFormIdValue;
+                    if (fieldName) {
+                      const fieldValue = accessValue(node, fieldName);
+                      fieldNode.dataset[MT_FORM_ID] = fieldValue;
+                    }
+                  });
               }
               newEls.push(newEl);
             });
@@ -557,8 +644,8 @@ const attachHandlers = () => {
   handleActions();
   handleActionForms();
   if (getJWT()) {
-    handleForms();
     handleData();
+    handleForms();
   }
 };
 
@@ -571,7 +658,7 @@ const getUser = () => {
           : GET_CURRENT_USER
       })
       .then(({ data }) => {
-        singleton.user = data.currentUser;
+        singleton.user = data.mUserInSession;
         handleHidden();
       });
   }

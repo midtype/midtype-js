@@ -2,7 +2,7 @@ import { gql } from 'apollo-boost';
 
 export const GET_CURRENT_USER = gql`
   query GetCurrentUser {
-    currentUser {
+    mUserInSession {
       id
       private {
         name
@@ -15,7 +15,7 @@ export const GET_CURRENT_USER = gql`
 
 export const GET_CURRENT_USER_WITH_STRIPE = gql`
   query GetCurrentUser {
-    currentUser {
+    mUserInSession {
       id
       private {
         name

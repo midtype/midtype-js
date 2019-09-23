@@ -9,6 +9,9 @@ interface MidtypeObject {
   openLogin: () => void;
   client: ApolloClient<any>;
   config: IUniverseConfig;
+  data: {
+    confirmToken?: string;
+  };
   user: {
     id: string;
     name: string;
@@ -18,8 +21,9 @@ interface MidtypeObject {
 
 const WINDOW_OBJECT_ID = 'Midtype';
 (window as any)[WINDOW_OBJECT_ID] = {
-  logout: clearJWT
+  logout: clearJWT,
+  data: {}
 };
 export const singleton: MidtypeObject = (window as any)[WINDOW_OBJECT_ID];
 
-export const STORAGE_CONFIRM_TOKEN = 'confirmToken';
+export const STORAGE_CONFIRM_TOKEN = 'token';
