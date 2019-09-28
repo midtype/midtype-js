@@ -2,13 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
     <title>Midtype</title>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
       [data-mt-model],
       [data-mt-if],
       [data-mt-if-not] {
         visibility: hidden;
+      }
+      .StripeElement {
+        margin: 30px 0;
+        width: 400px;
+        padding: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: 0 0px 10px 0 rgba(0,0,0,.2);
       }
     </style>
     <script>
@@ -17,7 +28,18 @@
           projectName: 'foo1-staging',
           redirectUrl: 'https://midtype.webflow.io/profile',
           projectId: 71, // 109
-          stripe: false
+          stripe: {
+            pk: '',
+            options: {
+              style: {
+                base: {
+                  color: '#32325d',
+                  fontFamily: '"Courier New", Helvetica, sans-serif',
+                  fontSmoothing: 'antialiased'
+                }
+              }
+            }
+          }
         });
       });
     </script>
@@ -34,6 +56,7 @@
       <h1 data-mt-field="private.name"></h1>
       <span data-mt-field="metadatumByUserId.id"></span>
       <span data-mt-field="metadatumByUserId.displayName"></span>
+      <h1 data-mt-if="metadatumByUserId.id">Hi!!</div>
       <form
         data-mt-form="metadatum"
         data-mt-form-id-value="metadatumByUserId.id"
@@ -43,6 +66,7 @@
         <input type="submit" value="Update" />
       </form>
     </div>
+
     <!-- <div data-mt-nodes="timer" data-mt-if="user">
       <div>
         <hr />
@@ -60,6 +84,20 @@
       <input type="text" data-mt-action-form-field="email" />
       <input type="submit" value="Sign Up" />
     </form>
+    <div data-mt-model="user" data-mt-if="user">
+      <form
+        data-mt-form="metadatum"
+        data-mt-form-id-value="metadatumByUserId.id"
+      >
+        <input
+          type="text"
+          data-mt-field="metadatumByUserId.displayName"
+          data-mt-field-attribute="value"
+          data-mt-form-field="displayName"
+        />
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
     <form
       data-mt-action-form="createUser"
       data-mt-if-not="user"
@@ -95,6 +133,22 @@
       <input type="text" data-mt-action-form-field="email" />
       <input type="password" data-mt-action-form-field="password" />
       <input type="submit" value="Sign In" />
+    </form>
+    <form data-mt-action-form="subscribe" data-mt-form-id="3470cde5-eb14-4e15-bd8d-a8360e1d9f4a">
+      <h4>Name</h4>
+      <input type="text" data-mt-action-form-field="name" />
+      <h4>Street</h4>
+      <input type="text" data-mt-action-form-field="addressStreet" />
+      <h4>City</h4>
+      <input type="text" data-mt-action-form-field="addressCity" />
+      <h4>State</h4>
+      <input type="text" data-mt-action-form-field="addressState" />
+      <h4>Zip</h4>
+      <input type="text" data-mt-action-form-field="addressZip" />
+      <h4>Coupon</h4>
+      <input type="text" data-mt-action-form-field="coupon" />
+      <div data-mt-action-form-field="creditCard"></div>
+      <input type="submit" value="subscribe" />
     </form>
   </body>
 </html>

@@ -4,7 +4,10 @@ interface IUniverseConfig {
   projectName: string;
   projectId: number;
   redirectUrl: string;
-  stripe: boolean;
+  stripe?: {
+    pk: string;
+    options?: any;
+  };
 }
 
 interface IUser {

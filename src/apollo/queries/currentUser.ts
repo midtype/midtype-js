@@ -22,11 +22,11 @@ export const GET_CURRENT_USER_WITH_STRIPE = gql`
         email
         photoUrl
       }
-      stripeSubscriptionBySubscriberId {
+      subscription {
         active
         id
         pid
-        stripePlan {
+        plan {
           id
           slug
           amount

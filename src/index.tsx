@@ -7,6 +7,7 @@ import { ApolloProvider } from 'react-apollo';
 
 import pluralize from 'pluralize';
 import { gql } from 'apollo-boost';
+import logger from './utils/logger';
 
 import client from './apollo/client';
 import {
@@ -21,6 +22,7 @@ import {
   GET_CURRENT_USER,
   GET_CURRENT_USER_WITH_STRIPE
 } from './apollo/queries/currentUser';
+import { subscribe } from './lib/stripe';
 
 import App from './App';
 
@@ -73,10 +75,10 @@ const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
         const type = fieldType ? fieldType.split('.')[0] : null;
         switch (type) {
           case 'user': {
-            if (singleton.user) {
+            if (singleton.data.user) {
               fields.push([
                 fieldName,
-                accessValue({ user: singleton.user }, fieldType || '')
+                accessValue({ user: singleton.data.user }, fieldType || '')
               ]);
             }
             break;
@@ -99,7 +101,7 @@ const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
             if (asset) {
               fields.push([fieldName, asset.asset_id]);
             } else {
-              console.warn(`Invalid asset uploaded for field ${fieldName}.`);
+              logger.err(`Invalid asset uploaded for field ${fieldName}.`);
             }
             break;
           default:
@@ -145,7 +147,7 @@ const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
         .mutate({
           mutation
         })
-        .then(handleData)
+        .then(() => handleData())
         .then(() => postSubmitAction(el))
         .catch(() => null);
     }
@@ -162,7 +164,7 @@ const handleForms = async () =>
         e.preventDefault();
       });
     } else {
-      console.warn(
+      logger.err(
         `${el.dataset.mtForm} form must include <input type="submit"> button.`
       );
     }
@@ -176,7 +178,7 @@ const parseSettings = (
     try {
       settings = JSON5.parse(el.dataset.mtSettings);
     } catch {
-      console.warn(`Malformed Midtype settings value.`);
+      logger.err(`Malformed Midtype settings value.`);
     }
   }
   return settings;
@@ -226,12 +228,12 @@ const verifyEmail = async (el: HTMLElement) => {
       e.preventDefault();
     });
   } else {
-    console.warn(
+    logger.err(
       'User email verification form must include <input type="submit"> button.'
     );
   }
   if (!email) {
-    console.warn(
+    logger.err(
       `User email verification forms must include an input for the email field.`
     );
   }
@@ -253,7 +255,7 @@ const createUser = async (el: HTMLElement) => {
     : () => null;
   const run = () => {
     if (!pw) {
-      console.warn(`No password input in create user form.`);
+      logger.err(`No password input in create user form.`);
       return;
     }
     const match = pwConfirm ? pwConfirm.value === pw.value : true;
@@ -304,10 +306,10 @@ const createUser = async (el: HTMLElement) => {
       e.preventDefault();
     });
   } else {
-    console.warn('Create user form must include <input type="submit"> button.');
+    logger.err('Create user form must include <input type="submit"> button.');
   }
   if (!pw) {
-    console.warn(`No password input in create user form.`);
+    logger.err(`No password input in create user form.`);
     return;
   }
 };
@@ -358,17 +360,19 @@ const authenticate = async (el: HTMLElement) => {
       e.preventDefault();
     });
   } else {
-    console.warn('Create user form must include <input type="submit"> button.');
+    logger.err('Create user form must include <input type="submit"> button.');
   }
   if (!pw || !email) {
-    console.warn(`No password input in sign in form.`);
+    logger.err(`No password input in sign in form.`);
     return;
   }
 };
 
 const handleActions = () => {
   document
-    .querySelectorAll<HTMLButtonElement>('button[data-mt-action]')
+    .querySelectorAll<HTMLButtonElement>(
+      'button[data-mt-action], a[data-mt-action]'
+    )
     .forEach(el => {
       switch (el.dataset.mtAction) {
         case 'login':
@@ -378,7 +382,7 @@ const handleActions = () => {
           el.addEventListener('click', singleton.logout);
           break;
         default:
-          console.warn(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
+          logger.err(`Unrecognized Midtype action: ${el.dataset.mtAction}`);
       }
     });
 };
@@ -397,21 +401,23 @@ const handleActionForms = () => {
         case 'login':
           authenticate(el);
           break;
+        case 'subscribe':
+          subscribe(el);
+          break;
         default:
-          console.warn(
+          logger.err(
             `Unrecognized Midtype action form: ${el.dataset.mtAction}`
           );
       }
     });
 };
 
-const checkIfExists = (key: string) =>
-  (singleton as any)[key] || (singleton as any).data[key] || get(key)
-    ? true
-    : false;
+const checkIfExists = (key: string, data: any) => {
+  return accessValue(data, key) || get(key) ? true : false;
+};
 
-const handleHidden = () => {
-  document
+const handleHidden = (doc: HTMLElement | HTMLDocument, data: any) => {
+  doc
     .querySelectorAll<HTMLElement>('[data-mt-if-not], [data-mt-if]')
     .forEach(el => {
       let visible = false;
@@ -419,29 +425,32 @@ const handleHidden = () => {
         const idsIf = el.dataset.mtIf.split(',').map(id => id.trim());
         const idsIfNot = el.dataset.mtIfNot.split(',').map(id => id.trim());
         visible =
-          idsIf.every(id => checkIfExists(id)) &&
-          idsIfNot.every(id => checkIfExists(id) === false);
+          idsIf.every(id => checkIfExists(id, data)) &&
+          idsIfNot.every(id => checkIfExists(id, data) === false);
       } else if (el.dataset.mtIfNot) {
         const ids = el.dataset.mtIfNot.split(',').map(id => id.trim());
-        visible = ids.every(id => checkIfExists(id) === false);
+        visible = ids.every(id => checkIfExists(id, data) === false);
       } else if (el.dataset.mtIf) {
         const ids = el.dataset.mtIf.split(',').map(id => id.trim());
-        visible = ids.every(id => checkIfExists(id));
+        visible = ids.every(id => checkIfExists(id, data));
       }
       if (visible) {
         el.style.visibility = 'visible';
+        el.style.removeProperty('display');
       } else {
         el.style.display = 'none';
       }
     });
 };
 
-const parseField = (name: string, fields: any) => {
-  const split = name.split('.');
-  fields[split[0]] =
-    split.length > 1
-      ? parseField(split.slice(1).join('.'), fields[split[0]] || {})
-      : null;
+const parseField = (fields: any, name?: string) => {
+  if (name) {
+    const split = name.split('.');
+    fields[split[0]] =
+      split.length > 1
+        ? parseField(fields[split[0]] || {}, split.slice(1).join('.'))
+        : null;
+  }
   return fields;
 };
 
@@ -463,31 +472,31 @@ const accessValue = (node: any, val: string): string => {
   return node[val];
 };
 
+const fieldTags = [
+  'data-mt-field',
+  'data-mt-form-field-value',
+  'data-mt-form-id-value',
+  'data-mt-if',
+  'data-mt-if-not'
+];
+
 const getModelFields = (el: HTMLElement) => {
   let fields: { [key: string]: any } = {};
   const els = el.dataset.mtField
     ? [el]
     : Array.from(
         el.querySelectorAll<HTMLElement>(
-          '[data-mt-field], [data-mt-form-field-value], [data-mt-form-id-value]'
+          fieldTags.map(tag => `[${tag}]`).join(',')
         )
       );
   els.forEach(field => {
-    if (field.dataset.mtField) {
-      fields = { ...fields, ...parseField(field.dataset.mtField, fields) };
-    }
-    if (field.dataset.mtFormFieldValue) {
+    fieldTags.forEach(tag => {
+      const formattedTag = changeCase.camelCase(tag.split('data-')[1]);
       fields = {
         ...fields,
-        ...parseField(field.dataset.mtFormFieldValue, fields)
+        ...parseField(fields, field.dataset[formattedTag])
       };
-    }
-    if (field.dataset.mtFormIdValue) {
-      fields = {
-        ...fields,
-        ...parseField(field.dataset.mtFormIdValue, fields)
-      };
-    }
+    });
   });
   if (fields.id !== null) {
     fields.id = null;
@@ -529,6 +538,7 @@ const handleData = () => {
         .then(({ data }) => {
           if (data && data[key]) {
             const node = data[key];
+            handleHidden(model, node);
             model.style.visibility = 'visible';
             model
               .querySelectorAll<HTMLElement>('[data-mt-field]')
@@ -658,11 +668,11 @@ const getUser = () => {
           : GET_CURRENT_USER
       })
       .then(({ data }) => {
-        singleton.user = data.mUserInSession;
-        handleHidden();
+        singleton.data.user = data.mUserInSession;
+        handleHidden(document, singleton.data);
       });
   }
-  handleHidden();
+  handleHidden(document, singleton.data);
   return Promise.resolve();
 };
 
