@@ -4,7 +4,7 @@ import { setJWT } from './jwt';
 import { set } from './store';
 import { STORAGE_CONFIRM_TOKEN } from '../constants/identifiers';
 
-export const checkQueries = () => {
+export const getQueries = () => {
   const parsed = qs.parseUrl(window.location.href);
   let hasQuery = false;
   if (parsed.query.jwt) {

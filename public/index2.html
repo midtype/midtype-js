@@ -30,7 +30,7 @@
     <script src="https://js.stripe.com/v3/"></script>
     <title>%REACT_APP_MY_APP_NAME%</title>
     <style>
-      [data-mt-model],
+      [data-mt-query],
       [data-mt-if],
       [data-mt-if-not] {
         visibility: hidden;
@@ -51,49 +51,49 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <button data-mt-action="login" data-mt-if-not="user">Login</button>
     <button data-mt-action="logout" data-mt-if="user">Logout</button>
-    <!-- <div data-mt-model="user">
+    <!-- <div data-mt-query="user">
       <h1>Hello <span data-mt-field="name"></span></h1>
       <h4 data-mt-field="email"></h4>
     </div> -->
-    <!-- <div data-mt-model="task" data-mt-model-id="312418da-de30-425a-8d6b-cad6a7402345">
+    <!-- <div data-mt-query="task" data-mt-query-id="312418da-de30-425a-8d6b-cad6a7402345">
         <h1>Hello <span data-mt-field="summary"></span></h1>
         <h4 data-mt-field="assignee.name"></h4>
       </div>
-    <form data-mt-form="story" data-mt-if="user">
-      <input type="text" value="Awesome task" data-mt-form-field="name" />
+    <form data-mt-mutate="story" data-mt-if="user">
+      <input type="text" value="Awesome task" data-mt-mutate-field="name" />
       <input
         type="text"
-        data-mt-form-field="assigneeId"
-        data-mt-form-field-user="true"
+        data-mt-mutate-field="assigneeId"
+        data-mt-mutate-field-user="true"
       />
       <input
         type="text"
-        data-mt-form-field="completed"
-        data-mt-form-field-boolean="true"
+        data-mt-mutate-field="completed"
+        data-mt-mutate-field-boolean="true"
         value="false"
       />
-      <select data-mt-form-field="projectId" data-mt-nodes="project">
-        <option data-mt-form-field-value="id" data-mt-field="name"></option>
+      <select data-mt-mutate-field="projectId" data-mt-query-all="project">
+        <option data-mt-mutate-field-value="id" data-mt-field="name"></option>
       </select>
       <input type="submit" value="Submit" />
     </form>
-    <form data-mt-form="task" data-mt-if="user" data-mt-form-id="312418da-de30-425a-8d6b-cad6a7402345">
-        <input type="text" value="Awesome task" data-mt-form-field="summary" />
+    <form data-mt-mutate="task" data-mt-if="user" data-mt-mutate-id="312418da-de30-425a-8d6b-cad6a7402345">
+        <input type="text" value="Awesome task" data-mt-mutate-field="summary" />
         <input
           type="text"
-          data-mt-form-field="assigneeId"
-          data-mt-form-field-user="true"
+          data-mt-mutate-field="assigneeId"
+          data-mt-mutate-field-user="true"
         />
         <input type="submit" value="Submit" />
       </form>
-    <div data-mt-nodes="tasks" data-mt-if="user">
+    <div data-mt-query-all="tasks" data-mt-if="user">
       <div>
         <hr />
         <h3><span data-mt-field="summary">sdafasdf</span></h1>
         <p data-mt-field="assignee.name">sadf</p>
       </div>
     </div> -->
-  <div data-mt-nodes="timers" data-mt-if="user">
+  <div data-mt-query-all="timers" data-mt-if="user">
     <div>
       <hr />
       <h3><span data-mt-field="newField"></span></h1>

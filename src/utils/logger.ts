@@ -1,3 +1,4 @@
 export default {
-  err: console.warn
+  err: console.warn,
+  warn: console.warn
 };

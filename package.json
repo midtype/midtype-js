@@ -7,7 +7,6 @@
     "@types/json5": "^0.0.30",
     "@types/md5": "^2.1.33",
     "@types/pluralize": "^0.0.29",
-    "@types/react-stripe-elements": "^1.3.0",
     "apollo-boost": "^0.4.2",
     "change-case": "^3.1.0",
     "dateformat": "^3.0.3",
@@ -20,7 +19,6 @@
     "react-apollo": "^2.5.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
-    "react-stripe-elements": "^4.0.0",
     "styled-components": "^4.3.2",
     "typescript": "3.5.2"
   },
@@ -32,11 +30,13 @@
     "@types/react-dom": "16.8.4",
     "@types/styled-components": "4.1.8",
     "glob": "^7.1.4",
+    "source-map-explorer": "^2.1.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "4.29.6",
     "webpack-cli": "^3.3.6"
   },
   "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

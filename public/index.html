@@ -2,12 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
     <title>Midtype</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-      [data-mt-model],
+      [data-mt-query],
       [data-mt-if],
       [data-mt-if-not] {
         visibility: hidden;
@@ -19,7 +19,7 @@
         border: 1px solid transparent;
         border-radius: 4px;
         background-color: white;
-        box-shadow: 0 0px 10px 0 rgba(0,0,0,.2);
+        box-shadow: 0 0px 10px 0 rgba(0, 0, 0, 0.2);
       }
     </style>
     <script>
@@ -29,7 +29,7 @@
           redirectUrl: 'https://midtype.webflow.io/profile',
           projectId: 71, // 109
           stripe: {
-            pk: '',
+            pk: 'pk_test_rb3Nm1iYchLwmERdI9lSuLEw00BvP09UfH',
             options: {
               style: {
                 base: {
@@ -47,36 +47,41 @@
   <body>
     <button data-mt-action="login" data-mt-if-not="user">Login</button>
     <button data-mt-action="logout" data-mt-if="user">Logout</button>
-    <!-- <div data-mt-model="user" data-mt-if="user">
+
+    <hr />
+
+    <div data-mt-query="user" data-mt-if="user">
       <h1 data-mt-field="private.name"></h1>
       <span data-mt-field="private.email"></span>
-      <img data-mt-field="private.photoUrl" data-mt-field-attribute="src" width="100" />
-    </div> -->
-    <div data-mt-model="user" data-mt-if="user">
-      <h1 data-mt-field="private.name"></h1>
+      <img
+        data-mt-field="private.photoUrl"
+        data-mt-field-attribute="src"
+        width="100"
+      />
+    </div>
+
+    <hr />
+
+    <div data-mt-query="user" data-mt-if="user">
+      <h1 data-mt-field="metadatumByUserId.displayName"></h1>
       <span data-mt-field="metadatumByUserId.id"></span>
-      <span data-mt-field="metadatumByUserId.displayName"></span>
-      <h1 data-mt-if="metadatumByUserId.id">Hi!!</div>
       <form
-        data-mt-form="metadatum"
-        data-mt-form-id-value="metadatumByUserId.id"
-        data-mt-settings="{submitUrl: 'https://midtype.webflow.io/sign-up/email-confirmation'}"
+        data-mt-mutate="metadatum"
+        data-mt-mutate-id-value="metadatumByUserId.id"
       >
-        <input type="text" data-mt-form-field="country" />
+        <input
+          type="text"
+          data-mt-mutate-field="displayName"
+          data-mt-mutate-field-type="user.private.name"
+        />
         <input type="submit" value="Update" />
       </form>
     </div>
 
-    <!-- <div data-mt-nodes="timer" data-mt-if="user">
-      <div>
-        <hr />
-        <h3><span data-mt-field="newField"></span></h1>
-        <p data-mt-field="owner.private.name"></p>
-        <img data-mt-field="image.location" data-mt-field-attribute="src" width="100" />
-      </div>
-    </div> -->
+    <hr />
+
     <form
-      data-mt-action-form="signup"
+      data-mt-action-form="verifyEmail"
       data-mt-settings="{confirmUserUrl:'https://midtype.webflow.io/sign-up/sign-up-free', submitUrl: 'https://midtype.webflow.io/sign-up/email-confirmation'}"
       data-mt-if-not="user,token"
     >
@@ -84,32 +89,34 @@
       <input type="text" data-mt-action-form-field="email" />
       <input type="submit" value="Sign Up" />
     </form>
-    <div data-mt-model="user" data-mt-if="user">
+
+    <hr />
+
+    <div data-mt-query="user" data-mt-if="user">
       <form
-        data-mt-form="metadatum"
-        data-mt-form-id-value="metadatumByUserId.id"
+        data-mt-mutate="metadatum"
+        data-mt-mutate-id-value="metadatumByUserId.id"
       >
         <input
           type="text"
           data-mt-field="metadatumByUserId.displayName"
           data-mt-field-attribute="value"
-          data-mt-form-field="displayName"
+          data-mt-mutate-field="displayName"
         />
         <input type="submit" value="Submit" />
       </form>
     </div>
-    <form
-      data-mt-action-form="createUser"
-      data-mt-if-not="user"
-      data-mt-if="token"
-    >
+
+    <hr />
+
+    <form data-mt-action-form="signup" data-mt-if-not="user" data-mt-if="token">
       <h2>Register</h2>
       <h3>Name</h3>
       <input type="text" data-mt-action-form-field="name" />
       <h3>Password</h3>
       <input type="password" data-mt-action-form-field="password" />
       <h3>Confirm Password</h3>
-      <input type="password" data-mt-action-formfield="passwordConfirm" />
+      <input type="password" data-mt-action-form-field="passwordConfirm" />
       <div data-mt-action-form-model="metadatum">
         <input
           type="text"
@@ -134,7 +141,10 @@
       <input type="password" data-mt-action-form-field="password" />
       <input type="submit" value="Sign In" />
     </form>
-    <form data-mt-action-form="subscribe" data-mt-form-id="3470cde5-eb14-4e15-bd8d-a8360e1d9f4a">
+    <form
+      data-mt-action-form="subscribe"
+      data-mt-mutate-id="3470cde5-eb14-4e15-bd8d-a8360e1d9f4a"
+    >
       <h4>Name</h4>
       <input type="text" data-mt-action-form-field="name" />
       <h4>Street</h4>

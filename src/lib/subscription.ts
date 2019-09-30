@@ -1,8 +1,22 @@
 import { singleton } from '../constants/identifiers';
 import CREATE_SUBSCRIPTION from '../apollo/mutations/createSubscription';
-import logger from '../utils/logger';
 
-export const subscribe = (el: HTMLFormElement) => {
+import logger from '../utils/logger';
+import { submitForm, postSubmitAction } from '../utils/dom';
+
+export const enableStripe = (config: IStripeConfig) => {
+  singleton.data.stripe = config;
+  const stripeForm = document.querySelector<HTMLFormElement>(
+    'form[data-mt-action-form="subscribe"]'
+  );
+  if (stripeForm) {
+    subscribe(stripeForm, config);
+  } else {
+    logger.warn('No Stripe payment forms found on this page.');
+  }
+};
+
+export const subscribe = (el: HTMLFormElement, config?: IStripeConfig) => {
   // Throw error if stripe.js not included on the page.
   if (!(window as any).Stripe) {
     logger.err('stripe.js has not been included on this page.');
@@ -10,8 +24,8 @@ export const subscribe = (el: HTMLFormElement) => {
   }
 
   // Ensure that a Stripe publishable key has been supplied.
-  const { stripe: config } = singleton.config;
-  if (!config || !config.pk) {
+  const stripeConfig = config || singleton.config.stripe;
+  if (!stripeConfig || !stripeConfig.pk) {
     logger.err(
       'Included subscription form without providing a valid Stripe publishable key.'
     );
@@ -26,9 +40,9 @@ export const subscribe = (el: HTMLFormElement) => {
   }
 
   // Init Stripe and mount the card element on to the page.
-  const stripe = (window as any).Stripe(config.pk);
+  const stripe = (window as any).Stripe(stripeConfig.pk);
   const elements = stripe.elements();
-  const card = elements.create('card', config.options);
+  const card = elements.create('card', stripeConfig.options);
   card.mount(cardEl);
 
   // Grab all the other possible inputs to a subscription form
@@ -36,7 +50,7 @@ export const subscribe = (el: HTMLFormElement) => {
     '[data-mt-action-form-field="coupon"]'
   );
 
-  const plan = el.dataset.mtFormId;
+  const plan = el.dataset.mtMutateId;
   const run = async () => {
     stripe.createToken(card).then(async (res: any) => {
       if (!res.error) {
@@ -49,16 +63,9 @@ export const subscribe = (el: HTMLFormElement) => {
           mutation: CREATE_SUBSCRIPTION,
           variables
         });
+        postSubmitAction(el);
       }
     });
   };
-  const submit = el.querySelector<HTMLElement>('input[type="submit"]');
-  if (!submit) {
-    logger.err('Subscription form must include <input type="submit"> button.');
-    return;
-  }
-  submit.addEventListener('click', e => {
-    run();
-    e.preventDefault();
-  });
+  submitForm(el, run, 'Subscription form');
 };
