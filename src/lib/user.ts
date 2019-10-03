@@ -3,7 +3,7 @@ import {
   GET_CURRENT_USER,
   GET_CURRENT_USER_WITH_STRIPE
 } from '../apollo/queries/currentUser';
-import { handleHidden } from './hidden';
+import { handleHiddenUser } from './hidden';
 
 import { getJWT } from '../utils/jwt';
 
@@ -17,9 +17,9 @@ export const getUser = () => {
       })
       .then(({ data }) => {
         singleton.data.user = data.mUserInSession;
-        handleHidden(document, singleton.data);
+        handleHiddenUser();
       });
   }
-  handleHidden(document, singleton.data);
+  handleHiddenUser();
   return Promise.resolve();
 };

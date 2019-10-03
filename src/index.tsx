@@ -2,18 +2,27 @@ import client from './apollo/client';
 import { singleton } from './constants/identifiers';
 import { handleData } from './lib/data';
 import { handleForms, handleActionForms, handleActions } from './lib/forms';
+import { handleRedirects } from './lib/redirects';
 import { enableStripe } from './lib/subscription';
 import { getUser } from './lib/user';
 import { getJWT } from './utils/jwt';
 import { getQueries } from './utils/queries';
 
 const attachHandlers = () => {
+  getUser();
   handleActions();
   handleActionForms();
   if (getJWT()) {
     handleData();
     handleForms();
   }
+};
+
+const init = (config: IUniverseConfig) => {
+  if (config.stripe) {
+    enableStripe(config.stripe);
+  }
+  attachHandlers();
 };
 
 singleton.init = (config: IUniverseConfig) => {
@@ -29,18 +38,30 @@ singleton.init = (config: IUniverseConfig) => {
     );
   }
 
-  // Checks if there is a JWT or confirm email token in the URL and if so, saves to local storage.
-  getQueries();
+  // Compute API endpoint and instantiate Apollo client for our user later.
+  const ENDPOINT = `https://${config.projectName}.midtype.dev/graphql`;
+  singleton.client = client(ENDPOINT);
+  singleton.endpoint = ENDPOINT;
 
   // Saves the provided config file to the global window object.
   singleton.config = config;
 
-  // If the provided config file includes Stripe details, automatically look for Stripe forms on the page.
-  if (config.stripe) {
-    enableStripe(config.stripe);
-  }
+  // Saves the refresh function to fetch/re-render data so client can call it as needed.
+  singleton.refresh = () => init(config);
 
-  singleton.client = client(config.projectName);
-  getUser();
-  attachHandlers();
+  // Check if we need to redirect this URL.
+  handleRedirects();
+
+  // Checks if there is a JWT or confirm email token in the URL and if so, saves to local storage.
+  getQueries();
+
+  if (document.readyState === 'complete') {
+    init(config);
+  } else {
+    document.onreadystatechange = () => {
+      if (document.readyState === 'complete') {
+        init(config);
+      }
+    };
+  }
 };

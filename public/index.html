@@ -7,11 +7,6 @@
     <title>Midtype</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-      [data-mt-query],
-      [data-mt-if],
-      [data-mt-if-not] {
-        visibility: hidden;
-      }
       .StripeElement {
         margin: 30px 0;
         width: 400px;
@@ -25,6 +20,11 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         Midtype.init({
+          redirects: {
+            signedOut: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }],
+            signedIn: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }]
+          },
+          onReady: () => console.log('Done!!!'),
           projectName: 'foo1-staging',
           redirectUrl: 'https://midtype.webflow.io/profile',
           projectId: 71, // 109
@@ -63,7 +63,7 @@
     <hr />
 
     <div data-mt-query="user" data-mt-if="user">
-      <h1 data-mt-field="metadatumByUserId.displayName"></h1>
+      <h1 data-mt-field="metadatumByUserId.firstName"></h1>
       <span data-mt-field="metadatumByUserId.id"></span>
       <form
         data-mt-mutate="metadatum"
@@ -71,7 +71,7 @@
       >
         <input
           type="text"
-          data-mt-mutate-field="displayName"
+          data-mt-mutate-field="firstName"
           data-mt-mutate-field-type="user.private.name"
         />
         <input type="submit" value="Update" />
@@ -99,9 +99,9 @@
       >
         <input
           type="text"
-          data-mt-field="metadatumByUserId.displayName"
+          data-mt-field="metadatumByUserId.firstName"
           data-mt-field-attribute="value"
-          data-mt-mutate-field="displayName"
+          data-mt-mutate-field="firstName"
         />
         <input type="submit" value="Submit" />
       </form>
@@ -120,7 +120,7 @@
       <div data-mt-action-form-model="metadatum">
         <input
           type="text"
-          data-mt-action-form-field="displayName"
+          data-mt-action-form-field="firstName"
           data-mt-action-form-field-type="user.private.name"
         />
         <input

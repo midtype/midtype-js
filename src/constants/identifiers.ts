@@ -6,11 +6,13 @@ import { enableStripe } from '../lib/subscription';
 export const ROOT_ELEMENT_ID = 'midtype';
 
 interface MidtypeObject {
+  refresh: () => void;
   init: (config: IUniverseConfig) => void;
   enableStripe: (config: IStripeConfig) => void;
   getJWT: () => string | null;
   logout: () => void;
   openLogin: () => void;
+  endpoint: string;
   client: ApolloClient<any>;
   config: IUniverseConfig;
   data: {

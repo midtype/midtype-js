@@ -7,6 +7,7 @@ import { handleHidden } from './hidden';
 import { singleton } from '../constants/identifiers';
 import { uppercase, accessValue, parsedFieldToQuery } from '../utils/text';
 import { parseField } from '../utils/dom';
+import logger from '../utils/logger';
 
 const MT_FORM_ID = 'mtMutateId';
 
@@ -72,7 +73,7 @@ export const handleData = () => {
           ? 'mUserInSession'
           : pluralize.singular(changeCase.camel(name));
       singleton.client
-        .query({ query, variables, fetchPolicy: 'network-only' })
+        .query({ query, variables })
         .then(({ data }) => {
           if (data && data[key]) {
             const node = data[key];
@@ -84,12 +85,12 @@ export const handleData = () => {
                 const fieldName = fieldNode.dataset.mtField;
                 if (fieldName) {
                   const fieldValue = accessValue(node, fieldName);
-                  if (fieldNode.dataset.mtFieldAttribute) {
+                  if (fieldNode.dataset.mtFieldAttribute && fieldValue) {
                     fieldNode.setAttribute(
                       fieldNode.dataset.mtFieldAttribute,
                       fieldValue
                     );
-                  } else {
+                  } else if (fieldValue) {
                     fieldNode.innerHTML = fieldValue;
                   }
                 }
@@ -105,7 +106,7 @@ export const handleData = () => {
               });
           }
         })
-        .catch(() => null);
+        .catch(e => logger.err(e));
     }
   });
   document
@@ -124,7 +125,7 @@ export const handleData = () => {
           }
         }`;
         singleton.client
-          .query({ query, fetchPolicy: 'network-only' })
+          .query({ query })
           .then(({ data }) => {
             if (data && data[pluralize(changeCase.camel(name))].nodes) {
               const nodes = data[pluralize(changeCase.camel(name))].nodes;

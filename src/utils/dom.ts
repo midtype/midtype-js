@@ -50,7 +50,6 @@ export const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
     fieldNode => {
       const type =
         fieldNode.dataset[changeCase.camel(`mt-${prefix}-field-type`)];
-      console.log(type);
       if (type && type.startsWith('user.')) {
         fieldNode.style.display = 'none';
       }
@@ -157,6 +156,7 @@ export const parseField = (fields: any, name?: string) => {
         ? parseField(fields[split[0]] || {}, split.slice(1).join('.'))
         : null;
   }
+  fields.id = null;
   return fields;
 };
 

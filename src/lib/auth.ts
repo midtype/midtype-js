@@ -10,7 +10,7 @@ import {
   parseForm,
   submitForm
 } from '../utils/dom';
-import { get } from '../utils/store';
+import { get, clear } from '../utils/store';
 import { setJWT } from '../utils/jwt';
 
 import logger from '../utils/logger';
@@ -107,6 +107,7 @@ export const signup = async (el: HTMLElement) => {
             res.data.createMUser.jwtToken
           ) {
             setJWT(res.data.createMUser.jwtToken);
+            clear(STORAGE_CONFIRM_TOKEN);
             return getUser();
           } else {
             return Promise.resolve();
@@ -116,7 +117,10 @@ export const signup = async (el: HTMLElement) => {
           handleMetadata();
         })
         .then(() => postSubmitAction(el))
-        .catch(e => logger.err(e));
+        .catch(e => {
+          clear(STORAGE_CONFIRM_TOKEN);
+          logger.err(e);
+        });
     }
   };
   submitForm(el, run, 'Create user form');

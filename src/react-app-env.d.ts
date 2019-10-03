@@ -4,7 +4,9 @@ interface IUniverseConfig {
   projectName: string;
   projectId: number;
   redirectUrl: string;
+  redirects?: { signedIn?: IRedirect[]; signedOut: IRedirect[] };
   stripe?: IStripeConfig;
+  onReady?: () => void;
 }
 
 interface IStripeConfig {
@@ -49,4 +51,9 @@ interface IStripeProduct {
   plans: {
     nodes: IStripePlan[];
   };
+}
+
+interface IRedirect {
+  paths: string[];
+  redirect?: string;
 }

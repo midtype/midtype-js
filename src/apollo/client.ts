@@ -2,9 +2,9 @@ import ApolloClient from 'apollo-boost';
 
 import { getJWT, clearJWT } from '../utils/jwt';
 
-const client = (midtypeId: string) =>
+const client = (uri: string) =>
   new ApolloClient({
-    uri: `https://${midtypeId}.midtype.dev/graphql`,
+    uri,
     request: operation => {
       operation.setContext(() => {
         // On every request to the API, retrieve the JWT from local storage.

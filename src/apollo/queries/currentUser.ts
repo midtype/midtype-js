@@ -5,6 +5,7 @@ export const GET_CURRENT_USER = gql`
     mUserInSession {
       id
       private {
+        id
         name
         email
         photoUrl
@@ -18,6 +19,7 @@ export const GET_CURRENT_USER_WITH_STRIPE = gql`
     mUserInSession {
       id
       private {
+        id
         name
         email
         photoUrl
