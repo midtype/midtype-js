@@ -36,7 +36,7 @@ export const handleHidden = (doc: HTMLElement | HTMLDocument, data: any) => {
 export const handleHiddenUser = () => {
   document
     .querySelectorAll<HTMLElement>(
-      '[data-mt-if-not="user"], [data-mt-if="user"]'
+      '[data-mt-if-not^="user"], [data-mt-if^="user"]'
     )
     .forEach(el => {
       let visible = false;

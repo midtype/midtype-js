@@ -12,6 +12,7 @@ interface MidtypeObject {
   getJWT: () => string | null;
   logout: () => void;
   openLogin: () => void;
+  fetch: (body: any) => Promise<any>;
   endpoint: string;
   client: ApolloClient<any>;
   config: IUniverseConfig;

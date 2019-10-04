@@ -42,6 +42,15 @@ singleton.init = (config: IUniverseConfig) => {
   const ENDPOINT = `https://${config.projectName}.midtype.dev/graphql`;
   singleton.client = client(ENDPOINT);
   singleton.endpoint = ENDPOINT;
+  singleton.fetch = (body: any) =>
+    fetch(ENDPOINT, {
+      headers: {
+        authorization: `Bearer ${getJWT()}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(body),
+      method: 'POST'
+    }).then(res => res.json());
 
   // Saves the provided config file to the global window object.
   singleton.config = config;
