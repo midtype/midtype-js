@@ -4,7 +4,14 @@ interface IUniverseConfig {
   projectName: string;
   projectId: number;
   redirectUrl: string;
-  stripe: boolean;
+  redirects?: { signedIn?: IRedirect[]; signedOut: IRedirect[] };
+  stripe?: IStripeConfig;
+  onReady?: () => void;
+}
+
+interface IStripeConfig {
+  pk: string;
+  options?: any;
 }
 
 interface IUser {
@@ -12,22 +19,7 @@ interface IUser {
   name: string;
   email: string;
   photoUrl: string;
-  stripeSubscriptionBySubscriberId: IStripeSubscription;
-}
-
-interface ITask {
-  id: string;
-  summary: string;
-  completed: boolean;
-  completedOn: string;
-  dueDate: string;
-  project: IProject;
-}
-
-interface IProject {
-  id: string;
-  name: string;
-  color: string;
+  subscription: IStripeSubscription;
 }
 
 interface IStripeSubscription {
@@ -36,7 +28,7 @@ interface IStripeSubscription {
   customerPid: string;
   active: boolean;
   subscriber: User;
-  stripePlan: IStripePlan;
+  plan: IStripePlan;
   inactiveReason: {
     cause: string;
     requiresActionSecret: string;
@@ -48,7 +40,7 @@ interface IStripePlan {
   pid: string;
   slug: string;
   amount: number;
-  stripeProduct: IStripeProduct;
+  product: IStripeProduct;
 }
 
 interface IStripeProduct {
@@ -56,7 +48,12 @@ interface IStripeProduct {
   pid: string;
   slug: string;
   name: string;
-  stripePlans: {
+  plans: {
     nodes: IStripePlan[];
   };
+}
+
+interface IRedirect {
+  paths: string[];
+  redirect?: string;
 }

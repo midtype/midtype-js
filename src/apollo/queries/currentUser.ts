@@ -2,27 +2,33 @@ import { gql } from 'apollo-boost';
 
 export const GET_CURRENT_USER = gql`
   query GetCurrentUser {
-    currentUser {
+    mUserInSession {
       id
-      name
-      email
-      photoUrl
+      private {
+        id
+        name
+        email
+        photoUrl
+      }
     }
   }
 `;
 
 export const GET_CURRENT_USER_WITH_STRIPE = gql`
   query GetCurrentUser {
-    currentUser {
+    mUserInSession {
       id
-      name
-      email
-      photoUrl
-      stripeSubscriptionBySubscriberId {
+      private {
+        id
+        name
+        email
+        photoUrl
+      }
+      subscription {
         active
         id
         pid
-        stripePlan {
+        plan {
           id
           slug
           amount
