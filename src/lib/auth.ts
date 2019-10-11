@@ -14,6 +14,7 @@ import { get, clear } from '../utils/store';
 import { setJWT } from '../utils/jwt';
 
 import logger from '../utils/logger';
+import actions from '../constants/actions';
 
 import GET_CONFIRM_USER_URLS, {
   IConfirmUserUrls
@@ -45,16 +46,15 @@ export const verifyEmail = async (el: HTMLElement) => {
     }
   }
 
-  const run = () => {
+  const run = () =>
     singleton.client
       .mutate<IVerifyEmail, IVerifyEmailVariables>({
         mutation: VERIFY_EMAIL,
         variables: { email: email.value, url: confirmUserUrl }
       })
-      .then(() => postSubmitAction(el))
-      .catch(() => null);
-  };
-  submitForm(el, run, 'User email verification form');
+      .then(() => postSubmitAction(el));
+
+  submitForm(el, run, actions.VERIFY_EMAIL);
 };
 
 export const signup = async (el: HTMLElement) => {
@@ -98,7 +98,7 @@ export const signup = async (el: HTMLElement) => {
         password: md5(pw.value),
         token: get(STORAGE_CONFIRM_TOKEN)
       };
-      singleton.client
+      return singleton.client
         .mutate({ mutation, variables })
         .then(res => {
           if (
@@ -119,11 +119,12 @@ export const signup = async (el: HTMLElement) => {
         .then(() => postSubmitAction(el))
         .catch(e => {
           clear(STORAGE_CONFIRM_TOKEN);
-          logger.err(e);
+          return Promise.reject(e);
         });
     }
+    return Promise.reject(new Error(`Password confirmation does't match.`));
   };
-  submitForm(el, run, 'Create user form');
+  submitForm(el, run, actions.SIGNUP);
 };
 
 export const login = async (el: HTMLElement) => {
@@ -150,7 +151,7 @@ export const login = async (el: HTMLElement) => {
       email: email.value,
       password: md5(pw.value)
     };
-    singleton.client
+    return singleton.client
       .mutate({ mutation, variables })
       .then(res => {
         if (
@@ -164,8 +165,7 @@ export const login = async (el: HTMLElement) => {
           return Promise.resolve();
         }
       })
-      .then(() => postSubmitAction(el))
-      .catch(e => logger.err(e));
+      .then(() => postSubmitAction(el));
   };
-  submitForm(el, run, 'Login form');
+  submitForm(el, run, actions.LOGIN);
 };

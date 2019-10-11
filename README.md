@@ -91,13 +91,29 @@ Value must be a valid field for the parent model that is referenced in a `data-m
 Value must be a valid field for the parent model that is being mutated. Must be an `<input>` element. When user submits the given form, the `value` attribute for this input will be saved for this the given field.
 
 #### `data-mt-mutate-field-type`
-Value must be one of: `number`, `string`, `asset`, `boolean`. Must be an `<input>` element. Specifies the data type for a given input field. If the value is `asset`, the `<input>` must also have attribute `type="file"`. If value is `boolean`, `<input>` must also have attribute `type="checkbox"`. If no field type specified, defaults to `string`.
+Value must be one of:
+- `number`
+- `string`
+- `asset`
+- `boolean`.
+
+Must be an `<input>` element. Specifies the data type for a given input field. If the value is `asset`, the `<input>` must also have attribute `type="file"`. If value is `boolean`, `<input>` must also have attribute `type="checkbox"`. If no field type specified, defaults to `string`.
 
 #### `data-mt-action`
-Value must be one of: `login`, `logout`. Can only be used on a `<button>` element. Adding this attribute will cause an action when the button it's attached to is clicked: for `login`, it will redirect user to Google for sign in. For `logout`, it will immediately log out the user.
+Value must be one of:
+- `loginGoogle`
+- `logout`
+
+Can only be used on a `<button>` element. Adding this attribute will cause an action when the button it's attached to is clicked: for `login`, it will redirect user to Google for sign in. For `logout`, it will immediately log out the user.
 
 #### `data-mt-action-form`
-Value must be one of: `verifyEmail`, `signup`, `login`, `subscribe`. Must be a `<form>` element. Any form with this tag will perform a specific GraphQL mutation when the `<submit>` button is clicked. In order for the mutation to successfully happen, your Midtype project must have the mutation enabled. See appendix for more details on `data-mt-action-form` usage.
+Value must be one of:
+- `verifyEmail`
+- `signup`
+- `login`
+- `subscribe`.
+
+Must be a `<form>` element. Any form with this tag will perform a specific GraphQL mutation when the `<submit>` button is clicked. In order for the mutation to successfully happen, your Midtype project must have the mutation enabled. See appendix for more details on `data-mt-action-form` usage.
 
 #### `data-mt-action-form-field`
 Value must be a valid input field for the parent `action-form` mutation. See appendix for details on usage.
@@ -113,17 +129,38 @@ Value can be `user` or a valid field for the parent model that is referenced in 
 Once the `Midtype` object has been configured with the `init` function, it can then be used to access a number of resources via Javascript on the frontend. Refer to the table below for a list of properties and methods associated with the `Midtype` object.
 
 #### `Midtype.init(config)`
-Function used to initialize the Midtype object with your project parameters. See above for configuration options. Config object must be of the following type:
+Function used to initialize the Midtype object with your project parameters. See above for configuration options. The Typescript definitions for the config object are as follows:
 ```typescript
+/// <reference types="react-scripts" />
+
 interface IMidtypeConfig {
-  projectName: string, // Your Midtype project ID
-  redirectUrl: string, // Where users should be redirected to after logging in with Google.
-  projectId: number, // Your Midtype project number
-  redirects: {
-    signedOut: Array<{ paths: string[], redirect: string }>, // Array of redirect objects to enforce when visit is not signed in.
-    signedIn: Array<{ paths: string[], redirect: string }>, // Array of redirect objects to enforce when visit is signed in.
-  }
+  projectName: string; // Your Midtype project ID
+  projectId: number; // Your Midtype project number
+  redirectUrl: string; // Where users should be redirected to after logging in with Google.
+  redirects?: { signedIn?: IRedirect[]; signedOut: IRedirect[] }; // Arrays of redirect rules for signed in and signed out users.
+  stripe?: IStripeConfig; // Optional. Can be passed in now, or can be passed in as a parameter to the Midtype.enableStripe() function.
+  onError?: (action: IMidtypeActionRef, e: Error) => void; // Optional. A function that will be called every time Midtype encounters an error.
 }
+
+interface IStripeConfig {
+  pk: string; // Your Stripe publishable key
+  options?: any; // Any additional options to pass into the Stripe Elements init function (see: https://stripe.com/docs/stripe-js/reference#stripe-elements)
+}
+
+/**
+ * A single redirect rule configuration.
+ */
+interface IRedirect {
+  paths: string[]; // The paths that should obey this rule. The current path is checked against each string in this array to see if it starts with it. So including a string `/blog` in this array will ensure all paths that begin with `/blog` obey this rule.
+  redirect: string; // Where the visitor should be redirected.
+}
+
+interface IMidtypeActionRef {
+  id: string; // The name of the action that Midtype is trying to perform.
+  el: HTMLElement; // The DOM element with an HTML tag that triggered the action.
+  field?: string; // Optional. Provides extra context about the field or child element that caused an error.
+}
+
 ```
 
 #### `Midtype.fetch(query, variables?)`
@@ -136,13 +173,7 @@ Function to retrieve the the JSON Web Token for the currently logged in user.
 Function to sign out the currently logged in user.
 
 #### `Midtype.enableStripe(config)`
-Function to be called on any page with a Credit Card information `<input>`. Automatically replaces the input with HTML attribute `data-mt-action-form-field="creditCard"` with a PCI-compliant input designed by Stripe. Input config object must be of the following type:
-```typescript
-interface IStripeConfig {
-  pk: string, // Stripe publishable key
-  options: // Any additional options to pass into the Stripe Elements init function (see: https://stripe.com/docs/stripe-js/reference#stripe-elements)
-}
-```
+Function to be called on any page with a Credit Card information `<input>`. Automatically replaces the input with HTML attribute `data-mt-action-form-field="creditCard"` with a PCI-compliant input designed by Stripe. See above for the input config object type definition.
 
 #### `Midtype.endpoint`
 Returns a `string` with the GraphQL endpoint for your Midtype API.
