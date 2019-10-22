@@ -4,6 +4,7 @@ import pluralize from 'pluralize';
 import { gql } from 'apollo-boost';
 
 import logger from './logger';
+import handleError from './error';
 import { getJWT } from './jwt';
 import { uppercase, accessValue } from './text';
 import { handleData } from '../lib/data';
@@ -137,13 +138,12 @@ export const parseForm = (el: HTMLElement, prefix: string, name?: string) => {
           }
         }
       `;
-      singleton.client
+      return singleton.client
         .mutate({
           mutation
         })
         .then(() => handleData())
-        .then(() => postSubmitAction(el))
-        .catch(() => null);
+        .then(() => postSubmitAction(el));
     }
   };
 };
@@ -160,17 +160,30 @@ export const parseField = (fields: any, name?: string) => {
   return fields;
 };
 
-export const submitForm = (el: HTMLElement, run: () => void, form?: string) => {
+export const submitForm = (
+  el: HTMLElement,
+  run: () => Promise<any>,
+  action: IMidtypeActionMetadata
+) => {
   const submit = el.querySelector<HTMLInputElement>('input[type="submit"]');
   if (!submit) {
-    logger.err(`${form || 'Form'} must include <input type="submit"> button.`);
+    logger.err(
+      `${action.id || 'Form'} must include <input type="submit"> button.`
+    );
     return;
   }
   submit.addEventListener('click', e => {
+    e.preventDefault();
+    const originalValue = submit.value;
     if (submit.dataset.wait) {
       submit.value = submit.dataset.wait;
     }
-    run();
-    e.preventDefault();
+    run()
+      .catch(e => {
+        handleError({ id: action.id, el }, e);
+      })
+      .finally(() => {
+        submit.value = originalValue;
+      });
   });
 };

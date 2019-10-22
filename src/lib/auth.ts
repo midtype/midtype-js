@@ -14,6 +14,7 @@ import { get, clear } from '../utils/store';
 import { setJWT } from '../utils/jwt';
 
 import logger from '../utils/logger';
+import actions from '../constants/actions';
 
 import GET_CONFIRM_USER_URLS, {
   IConfirmUserUrls
@@ -48,16 +49,15 @@ export const verifyEmail = async (el: HTMLElement) => {
     }
   }
 
-  const run = () => {
+  const run = () =>
     singleton.client
       .mutate<IVerifyEmail, IVerifyEmailVariables>({
         mutation: VERIFY_EMAIL,
         variables: { email: email.value, url: confirmUserUrl }
       })
-      .then(() => postSubmitAction(el))
-      .catch(() => null);
-  };
-  submitForm(el, run, 'User email verification form');
+      .then(() => postSubmitAction(el));
+
+  submitForm(el, run, actions.VERIFY_EMAIL);
 };
 
 export const signup = async (el: HTMLElement) => {
@@ -101,7 +101,7 @@ export const signup = async (el: HTMLElement) => {
         password: md5(pw.value),
         token: get(STORAGE_CONFIRM_TOKEN)
       };
-      singleton.client
+      return singleton.client
         .mutate({ mutation, variables })
         .then(res => {
           if (
@@ -119,11 +119,12 @@ export const signup = async (el: HTMLElement) => {
           handleMetadata();
         })
         .then(() => postSubmitAction(el))
-        .catch(e => logger.err(e))
+        .catch(e => Promise.reject(e))
         .finally(() => clear(STORAGE_CONFIRM_TOKEN));
     }
+    return Promise.reject(new Error(`Password confirmation does't match.`));
   };
-  submitForm(el, run, 'Create user form');
+  submitForm(el, run, actions.SIGNUP);
 };
 
 export const login = async (el: HTMLElement) => {
@@ -150,13 +151,23 @@ export const login = async (el: HTMLElement) => {
       email: email.value,
       password: md5(pw.value)
     };
-    singleton.client
+    return singleton.client
       .mutate({ mutation, variables })
-
-      .then(() => postSubmitAction(el))
-      .catch(e => logger.err(e));
+      .then(res => {
+        if (
+          res.data &&
+          res.data.mAuthenticate &&
+          res.data.mAuthenticate.jwtToken
+        ) {
+          setJWT(res.data.mAuthenticate.jwtToken);
+          return getUser();
+        } else {
+          return Promise.resolve();
+        }
+      })
+      .then(() => postSubmitAction(el));
   };
-  submitForm(el, run, 'Login form');
+  submitForm(el, run, actions.LOGIN);
 };
 
 export const forgotPassword = async (el: HTMLElement) => {
@@ -185,7 +196,7 @@ export const forgotPassword = async (el: HTMLElement) => {
   }
 
   const run = () => {
-    singleton.client
+    return singleton.client
       .mutate<IVerifyEmail, IVerifyEmailVariables>({
         mutation: VERIFY_EMAIL,
         variables: {
@@ -197,7 +208,7 @@ export const forgotPassword = async (el: HTMLElement) => {
       .then(() => postSubmitAction(el))
       .catch(() => null);
   };
-  submitForm(el, run, 'User forgot password form');
+  submitForm(el, run, actions.FORGOT_PASSWORD);
 };
 
 export const resetPassword = async (el: HTMLElement) => {
@@ -226,24 +237,13 @@ export const resetPassword = async (el: HTMLElement) => {
         newPassword: md5(pw.value),
         token: get(STORAGE_CONFIRM_TOKEN)
       };
-      singleton.client
+      return singleton.client
         .mutate({ mutation, variables })
-        .then(res => {
-          if (
-            res.data &&
-            res.data.mChangePassword &&
-            res.data.mChangePassword.success
-          ) {
-            setJWT(res.data.createMUser.jwtToken);
-            return getUser();
-          } else {
-            return Promise.resolve();
-          }
-        })
         .then(() => postSubmitAction(el))
         .catch(e => logger.err(e))
         .finally(() => clear(STORAGE_CONFIRM_TOKEN));
     }
+    return Promise.reject('Password and confirm password do not match.');
   };
-  submitForm(el, run, 'Create user form');
+  submitForm(el, run, actions.RESET_PASSWORD);
 };

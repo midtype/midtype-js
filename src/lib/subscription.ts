@@ -2,7 +2,9 @@ import { singleton } from '../constants/identifiers';
 import CREATE_SUBSCRIPTION from '../apollo/mutations/createSubscription';
 
 import logger from '../utils/logger';
+import handleError from '../utils/error';
 import { submitForm, postSubmitAction } from '../utils/dom';
+import actions from '../constants/actions';
 
 export const enableStripe = (config: IStripeConfig) => {
   singleton.data.stripe = config;
@@ -45,6 +47,16 @@ export const subscribe = (el: HTMLFormElement, config?: IStripeConfig) => {
   const card = elements.create('card', stripeConfig.options);
   card.mount(cardEl);
 
+  // Show card errors in the error element if it's provided on the form
+  const actionRef = {
+    id: actions.SUBSCRIBE.id,
+    el,
+    field: 'creditCard'
+  };
+  card.addEventListener('change', (e: any) => {
+    handleError(actionRef, e.error);
+  });
+
   // Grab all the other possible inputs to a subscription form
   const coupon = el.querySelector<HTMLInputElement>(
     '[data-mt-action-form-field="coupon"]'
@@ -52,7 +64,8 @@ export const subscribe = (el: HTMLFormElement, config?: IStripeConfig) => {
 
   const plan = el.dataset.mtMutateId;
   const run = async () => {
-    stripe.createToken(card).then(async (res: any) => {
+    try {
+      const res = await stripe.createToken(card);
       if (!res.error) {
         const variables = {
           plan,
@@ -64,8 +77,12 @@ export const subscribe = (el: HTMLFormElement, config?: IStripeConfig) => {
           variables
         });
         postSubmitAction(el);
+        return Promise.resolve();
       }
-    });
+      return Promise.reject(new Error(res.error));
+    } catch (e) {
+      return Promise.reject(e);
+    }
   };
-  submitForm(el, run, 'Subscription form');
+  submitForm(el, run, actions.SUBSCRIBE);
 };

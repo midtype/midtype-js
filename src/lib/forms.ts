@@ -1,13 +1,20 @@
-import { verifyEmail, signup, login, forgotPassword } from './auth';
+import {
+  verifyEmail,
+  signup,
+  login,
+  forgotPassword,
+  resetPassword
+} from './auth';
 
 import { singleton } from '../constants/identifiers';
 import { parseForm, submitForm } from '../utils/dom';
 import logger from '../utils/logger';
+import actions from '../constants/actions';
 
 export const handleForms = async () =>
   document.querySelectorAll<HTMLFormElement>('[data-mt-mutate]').forEach(el => {
     const run = parseForm(el, 'mutate');
-    submitForm(el, run, `${el.dataset.mtMutate} form`);
+    submitForm(el, run, actions.MUTATE);
   });
 
 export const handleActions = () => {
@@ -17,7 +24,7 @@ export const handleActions = () => {
     )
     .forEach(el => {
       switch (el.dataset.mtAction) {
-        case 'login':
+        case 'loginGoogle':
           el.addEventListener('click', singleton.openLogin);
           break;
         case 'logout':
@@ -45,6 +52,9 @@ export const handleActionForms = () => {
           break;
         case 'forgotPassword':
           forgotPassword(el);
+          break;
+        case 'resetPassword':
+          resetPassword(el);
           break;
         case 'subscribe':
           // Don't automatically handle Stripe form. Make user manually call it.

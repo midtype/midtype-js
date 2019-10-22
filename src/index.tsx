@@ -18,14 +18,14 @@ const attachHandlers = () => {
   }
 };
 
-const init = (config: IUniverseConfig) => {
+const init = (config: IMidtypeConfig) => {
   if (config.stripe) {
     enableStripe(config.stripe);
   }
   attachHandlers();
 };
 
-singleton.init = (config: IUniverseConfig) => {
+singleton.init = (config: IMidtypeConfig) => {
   if (!config.projectId) {
     throw new Error(
       'Midtype package cannot be initiated without a valid Midtype Project ID.'
