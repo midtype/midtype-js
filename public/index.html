@@ -108,7 +108,11 @@
 
     <hr />
 
-    <form data-mt-action-form="signup" data-mt-if-not="user" data-mt-if="token">
+    <form
+      data-mt-action-form="signup"
+      data-mt-if-not="user"
+      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
+    >
       <h2>Register</h2>
       <h3>Name</h3>
       <input type="text" data-mt-action-form-field="name" />
@@ -130,6 +134,31 @@
       </div>
       <input type="submit" value="Register" />
     </form>
+
+    <form
+      data-mt-action-form="forgotPassword"
+      data-mt-if-not="user,token"
+      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
+    >
+      <h2>Forgot Password?</h2>
+      <h3>Email</h3>
+      <input type="text" data-mt-action-form-field="email" />
+      <input type="submit" value="Send Email" />
+    </form>
+
+    <form
+      data-mt-action-form="resetPassword"
+      data-mt-if-not="user"
+      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
+    >
+      <h2>Reset Password</h2>
+      <h3>New Password</h3>
+      <input type="text" data-mt-action-form-field="password" />
+      <h3>Confirm Password</h3>
+      <input type="text" data-mt-action-form-field="passwordConfirm" />
+      <input type="submit" value="Reset" />
+    </form>
+
     <form
       data-mt-action-form="login"
       data-mt-if-not="user"

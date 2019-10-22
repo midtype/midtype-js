@@ -36,6 +36,9 @@ export const verifyEmail = async (el: HTMLElement) => {
   }
 
   let { confirmUserUrl } = parseSettings(el);
+  if (el.dataset.mtSettingConfirmUserUrl) {
+    confirmUserUrl = el.dataset.mtSettingConfirmUserUrl;
+  }
   if (!confirmUserUrl) {
     const res = await singleton.client.query<IConfirmUserUrls>({
       query: GET_CONFIRM_USER_URLS
@@ -107,7 +110,6 @@ export const signup = async (el: HTMLElement) => {
             res.data.createMUser.jwtToken
           ) {
             setJWT(res.data.createMUser.jwtToken);
-            clear(STORAGE_CONFIRM_TOKEN);
             return getUser();
           } else {
             return Promise.resolve();
@@ -117,10 +119,8 @@ export const signup = async (el: HTMLElement) => {
           handleMetadata();
         })
         .then(() => postSubmitAction(el))
-        .catch(e => {
-          clear(STORAGE_CONFIRM_TOKEN);
-          logger.err(e);
-        });
+        .catch(e => logger.err(e))
+        .finally(() => clear(STORAGE_CONFIRM_TOKEN));
     }
   };
   submitForm(el, run, 'Create user form');
@@ -152,20 +152,98 @@ export const login = async (el: HTMLElement) => {
     };
     singleton.client
       .mutate({ mutation, variables })
-      .then(res => {
-        if (
-          res.data &&
-          res.data.mAuthenticate &&
-          res.data.mAuthenticate.jwtToken
-        ) {
-          setJWT(res.data.mAuthenticate.jwtToken);
-          return getUser();
-        } else {
-          return Promise.resolve();
-        }
-      })
+
       .then(() => postSubmitAction(el))
       .catch(e => logger.err(e));
   };
   submitForm(el, run, 'Login form');
+};
+
+export const forgotPassword = async (el: HTMLElement) => {
+  const email = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="email"]'
+  );
+
+  if (!email) {
+    logger.err(
+      `Forgot password forms must include an input for the email field.`
+    );
+    return;
+  }
+
+  let { confirmUserUrl } = parseSettings(el);
+  if (el.dataset.mtSettingConfirmUserUrl) {
+    confirmUserUrl = el.dataset.mtSettingConfirmUserUrl;
+  }
+  if (!confirmUserUrl) {
+    const res = await singleton.client.query<IConfirmUserUrls>({
+      query: GET_CONFIRM_USER_URLS
+    });
+    if (res.data && res.data.mSetting && res.data.mSetting.value.length) {
+      confirmUserUrl = res.data.mSetting.value[0];
+    }
+  }
+
+  const run = () => {
+    singleton.client
+      .mutate<IVerifyEmail, IVerifyEmailVariables>({
+        mutation: VERIFY_EMAIL,
+        variables: {
+          email: email.value,
+          url: confirmUserUrl,
+          toResetPassword: true
+        }
+      })
+      .then(() => postSubmitAction(el))
+      .catch(() => null);
+  };
+  submitForm(el, run, 'User forgot password form');
+};
+
+export const resetPassword = async (el: HTMLElement) => {
+  const pw = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="password"]'
+  );
+  const pwConfirm = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="passwordConfirm"]'
+  );
+
+  if (!pw) {
+    logger.err(`No password input in reset password form.`);
+    return;
+  }
+  const run = () => {
+    const match = pwConfirm ? pwConfirm.value === pw.value : true;
+    if (match) {
+      const mutation = gql`
+        mutation ResetPassword($token: String!, $newPassword: String!) {
+          mChangePassword(input: { token: $token, newPassword: $newPassword }) {
+            success
+          }
+        }
+      `;
+      const variables = {
+        newPassword: md5(pw.value),
+        token: get(STORAGE_CONFIRM_TOKEN)
+      };
+      singleton.client
+        .mutate({ mutation, variables })
+        .then(res => {
+          if (
+            res.data &&
+            res.data.mChangePassword &&
+            res.data.mChangePassword.success
+          ) {
+            setJWT(res.data.createMUser.jwtToken);
+            return getUser();
+          } else {
+            return Promise.resolve();
+          }
+        })
+        .then(() => postSubmitAction(el))
+        .catch(e => logger.err(e))
+        .finally(() => clear(STORAGE_CONFIRM_TOKEN));
+    }
+  };
+  submitForm(el, run, 'Create user form');
 };

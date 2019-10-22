@@ -1,4 +1,4 @@
-import { verifyEmail, signup, login } from './auth';
+import { verifyEmail, signup, login, forgotPassword } from './auth';
 
 import { singleton } from '../constants/identifiers';
 import { parseForm, submitForm } from '../utils/dom';
@@ -42,6 +42,9 @@ export const handleActionForms = () => {
           break;
         case 'login':
           login(el);
+          break;
+        case 'forgotPassword':
+          forgotPassword(el);
           break;
         case 'subscribe':
           // Don't automatically handle Stripe form. Make user manually call it.
