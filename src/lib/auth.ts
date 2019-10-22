@@ -237,7 +237,6 @@ export const resetPassword = async (el: HTMLElement) => {
       return singleton.client
         .mutate({ mutation, variables })
         .then(() => postSubmitAction(el))
-        .catch(e => logger.err(e))
         .finally(() => clear(STORAGE_CONFIRM_TOKEN));
     }
     return Promise.reject('Password and confirm password do not match.');
