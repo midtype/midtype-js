@@ -21,7 +21,7 @@ Here's a sample of what the code snippet should look like:
 ```html
 <script
   type="application/javascript"
-  src="https://storage.googleapis.com/midtype-assets/js/v1.1.js"
+  src="https://js.midtype.com/v1.3.0js"
 ></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {

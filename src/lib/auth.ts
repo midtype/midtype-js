@@ -70,17 +70,14 @@ export const signup = async (el: HTMLElement) => {
   const pwConfirm = el.querySelector<HTMLInputElement>(
     'input[data-mt-action-form-field="passwordConfirm"]'
   );
-
-  if (!pw) {
-    logger.err(`No password input in create user form.`);
-    return;
-  }
-
   const metadata = el.querySelector<HTMLElement>('[data-mt-action-form-model]');
   const handleMetadata = metadata
     ? parseForm(metadata, 'action-form', metadata.dataset.mtActionFormModel)
     : () => null;
   const run = () => {
+    if (!pw) {
+      return Promise.reject(`No password input in create user form.`);
+    }
     const match = pwConfirm ? pwConfirm.value === pw.value : true;
     if (match && name) {
       const mutation = gql`
