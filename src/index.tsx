@@ -32,18 +32,16 @@ singleton.init = (config: IUniverseConfig) => {
     );
   }
 
-  if (!config.projectName) {
+  if (!config.endpoint) {
     throw new Error(
-      'Midtype package cannot be initiated without a valid Midtype Project name.'
+      'Midtype package cannot be initiated without a valid Midtype Project endpoint.'
     );
   }
 
   // Compute API endpoint and instantiate Apollo client for our user later.
-  const ENDPOINT = `https://${config.projectName}.midtype.dev/graphql`;
-  singleton.client = client(ENDPOINT);
-  singleton.endpoint = ENDPOINT;
+  singleton.client = client(config.endpoint);
   singleton.fetch = (body: any) =>
-    fetch(ENDPOINT, {
+    fetch(config.endpoint, {
       headers: {
         authorization: `Bearer ${getJWT()}`,
         'content-type': 'application/json'

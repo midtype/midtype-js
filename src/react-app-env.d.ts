@@ -1,8 +1,8 @@
 /// <reference types="react-scripts" />
 
 interface IUniverseConfig {
-  projectName: string;
-  projectId: number;
+  endpoint: string;
+  projectId: string;
   redirectUrl: string;
   redirects?: { signedIn?: IRedirect[]; signedOut: IRedirect[] };
   stripe?: IStripeConfig;

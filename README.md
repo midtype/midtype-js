@@ -3,11 +3,15 @@
 Midtype.js makes it easy to use Midtype backends in HTML and Webflow projects. Please note that in this README, we will be using [some of terms defined here](https://www.midtype.com/docs/getting-started/definitions/).
 
 ## Getting Started
+
 To use Midtype in your HTML or Webflow project, [sign up](https://www.midtype.com/docs/getting-started) for an account and design your API. The names of the models and fields you define in the Midtype UI determine how you access that data to perform create, read, and update operations with this SDK.
 
 ### Quickstart
+
 ---
+
 #### Step 1: Insert Your Snippet
+
 Paste your code snippet before the `</head>` tag in every page of your project. For Webflow, this is done by navigating to your site's project settings (`https://webflow.com/dashboard/sites/[SITE_NAME]/general`) > Code > Head Code:
 
 <img src="images/webflow-custom-code.png" alt="Adding your code snippet in Webflow" width="700"/>
@@ -17,17 +21,19 @@ Here's a sample of what the code snippet should look like:
 ```html
 <script src="https://storage.cloud.google.com/midtype-assets-staging/bundle.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  Midtype.init({
-    projectName: '[MIDTYPE_PROJECT_NAME]',
-    redirectUrl: '[VALID_REDIRECT_URL]', // This is should be a URL on your domain
-    projectId: '[MIDTYPE_PROJECT_ID]',
-    stripe: false
+  document.addEventListener('DOMContentLoaded', function() {
+    Midtype.init({
+      projectId: '[MIDTYPE_PROJECT_NAME]',
+      endpoint: '[MIDTYPE_PROJECT_ENDPOINT]',
+      redirectUrl: '[VALID_REDIRECT_URL]', // This is should be a URL on your domain
+      stripe: false
+    });
   });
-});
 </script>
 ```
+
 ---
+
 #### Step 2: Add a Login Button
 
 Add an HTML button on your page with the `data-mt-action="login"` tag to your page:
@@ -58,13 +64,14 @@ Once a user is logged in. Let's add a `<h1>` that displays their name and an `<i
 Now, we can do the same for any other model we have [defined in our Midtype project](https://app.midtype.com/models). See the full API reference below for the list of data attributes that can be used.
 
 ## API Reference
+
 You can easily attach data to your HTML elements using `data` attributes. You can also perform standard create and update operations on any object using HTML forms in conjunction with these attributes.
 
 | Attribute                   | Value                                          | HTML Elements | Purpose                                                                                                                                                                                                                                              |
 | --------------------------- | ---------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data-mt-query`             | Any Model Name                                 | All           | Show data for a single record.  Must be used in conjunction with `data-mt-query-id` unless the model is `user`.                                                                                                                                      |
+| `data-mt-query`             | Any Model Name                                 | All           | Show data for a single record. Must be used in conjunction with `data-mt-query-id` unless the model is `user`.                                                                                                                                       |
 | `data-mt-query-id`          | `UUID`                                         | All           | Must be used in conjunction with `data-mt-query` to specify which record to show data for.                                                                                                                                                           |
-| `data-mt-query-all`         | Any Model Name                                 | All           | Show  all records of the given model. Immediate child of element with this attribute must be a `<div>`.                                                                                                                                              |
+| `data-mt-query-all`         | Any Model Name                                 | All           | Show all records of the given model. Immediate child of element with this attribute must be a `<div>`.                                                                                                                                               |
 | `data-mt-field`             | Any Field for Parent Model                     | All           | When used as a child of an element with `data-mt-query` or `data-mt-query-all`, it is injected with data from the given field. Supports dot notation for sub-fields (e.g. `photo.location`)                                                          |
 | `data-mt-mutate`            | Any Model Name                                 | `<form>`      | Allows user to create or update records of this model, based on child `<input>` elements. `<form>` must include an `<input type="submit" />` element.                                                                                                |
 | `data-mt-mutate-id`         | `UUID`                                         | `<form>`      | If used in conjunction with `data-mt-mutate`, allows user to update fields on the record with the given ID.                                                                                                                                          |
@@ -79,6 +86,7 @@ You can easily attach data to your HTML elements using `data` attributes. You ca
 ### Examples
 
 For these examples, we will assume our Midtype backend has a model named `task` with the following fields:
+
 - `summary` - `string`
 - `screenshot` - `linked asset`
 - `owner` - `linked user`
@@ -162,7 +170,10 @@ The `data-mt-query-all` tag can be used similarly to `data-mt-query`, except it 
 The HTML for updating a record is almost identical to that for creating one, except we must also specify a `data-mt-mutate-id` value.
 
 ```html
-<form data-mt-mutate="task" data-mt-mutate-id="312418da-de30-425a-8d6b-cad6a7402345">
+<form
+  data-mt-mutate="task"
+  data-mt-mutate-id="312418da-de30-425a-8d6b-cad6a7402345"
+>
   <input
     type="text"
     data-mt-mutate-field="ownerId"
