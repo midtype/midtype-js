@@ -3,11 +3,12 @@ import { verifyEmail, signup, login } from './auth';
 import { singleton } from '../constants/identifiers';
 import { parseForm, submitForm } from '../utils/dom';
 import logger from '../utils/logger';
+import actions from '../constants/actions';
 
 export const handleForms = async () =>
   document.querySelectorAll<HTMLFormElement>('[data-mt-mutate]').forEach(el => {
     const run = parseForm(el, 'mutate');
-    submitForm(el, run, `${el.dataset.mtMutate} form`);
+    submitForm(el, run, actions.MUTATE);
   });
 
 export const handleActions = () => {

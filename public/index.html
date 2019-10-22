@@ -16,6 +16,23 @@
         background-color: white;
         box-shadow: 0 0px 10px 0 rgba(0, 0, 0, 0.2);
       }
+      #loginError {
+        width: 300px;
+        height: 150px;
+        background: red;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        opacity: 0;
+        visibility: hidden;
+        transition: 250ms all;
+        color: white;
+        font-weight: bold;
+      }
+      #loginError.mt-error-visible {
+        opacity: 1;
+        visibility: visible;
+      }
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -24,7 +41,7 @@
             signedOut: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }],
             signedIn: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }]
           },
-          onReady: () => console.log('Done!!!'),
+          onError: (a, b) => console.log(a, b),
           projectName: 'foo1-staging',
           redirectUrl: 'https://midtype.webflow.io/profile',
           projectId: 71, // 109
@@ -45,7 +62,7 @@
     </script>
   </head>
   <body>
-    <button data-mt-action="login" data-mt-if-not="user">Login</button>
+    <button data-mt-action="loginGoogle" data-mt-if-not="user">Login</button>
     <button data-mt-action="logout" data-mt-if="user">Logout</button>
 
     <hr />
@@ -134,16 +151,19 @@
     <form
       data-mt-action-form="login"
       data-mt-if-not="user"
-      data-mt-settings="{submitUrl: 'http://localhost:3000/profile'}"
+      data-redirect="http://localhost:3000/profile"
+      data-mt-error="#loginError"
     >
       <h2>Sign In</h2>
       <input type="text" data-mt-action-form-field="email" />
       <input type="password" data-mt-action-form-field="password" />
       <input type="submit" value="Sign In" />
     </form>
+    <div id="loginError"></div>
     <form
       data-mt-action-form="subscribe"
       data-mt-mutate-id="3470cde5-eb14-4e15-bd8d-a8360e1d9f4a"
+      data-mt-error="#loginError"
     >
       <h4>Name</h4>
       <input type="text" data-mt-action-form-field="name" />
