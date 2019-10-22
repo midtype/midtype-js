@@ -1,8 +1,8 @@
 /// <reference types="react-scripts" />
 
 interface IMidtypeConfig {
-  projectName: string; // Your Midtype project ID
-  projectId: number; // Your Midtype project number
+  projectId: string; // Your Midtype project's ID
+  endpoint: string; // Your Midtype project's endpoint
   redirectUrl: string; // Where users should be redirected to after logging in with Google.
   redirects?: { signedIn?: IRedirect[]; signedOut: IRedirect[] }; // Arrays of redirect rules for signed in and signed out users.
   stripe?: IStripeConfig; // Optional. Can be passed in now, or can be passed in as a parameter to the Midtype.enableStripe() function.

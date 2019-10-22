@@ -37,6 +37,9 @@ export const verifyEmail = async (el: HTMLElement) => {
   }
 
   let { confirmUserUrl } = parseSettings(el);
+  if (el.dataset.mtSettingConfirmUserUrl) {
+    confirmUserUrl = el.dataset.mtSettingConfirmUserUrl;
+  }
   if (!confirmUserUrl) {
     const res = await singleton.client.query<IConfirmUserUrls>({
       query: GET_CONFIRM_USER_URLS
@@ -67,17 +70,14 @@ export const signup = async (el: HTMLElement) => {
   const pwConfirm = el.querySelector<HTMLInputElement>(
     'input[data-mt-action-form-field="passwordConfirm"]'
   );
-
-  if (!pw) {
-    logger.err(`No password input in create user form.`);
-    return;
-  }
-
   const metadata = el.querySelector<HTMLElement>('[data-mt-action-form-model]');
   const handleMetadata = metadata
     ? parseForm(metadata, 'action-form', metadata.dataset.mtActionFormModel)
     : () => null;
   const run = () => {
+    if (!pw) {
+      return Promise.reject(`No password input in create user form.`);
+    }
     const match = pwConfirm ? pwConfirm.value === pw.value : true;
     if (match && name) {
       const mutation = gql`
@@ -107,7 +107,6 @@ export const signup = async (el: HTMLElement) => {
             res.data.createMUser.jwtToken
           ) {
             setJWT(res.data.createMUser.jwtToken);
-            clear(STORAGE_CONFIRM_TOKEN);
             return getUser();
           } else {
             return Promise.resolve();
@@ -117,10 +116,8 @@ export const signup = async (el: HTMLElement) => {
           handleMetadata();
         })
         .then(() => postSubmitAction(el))
-        .catch(e => {
-          clear(STORAGE_CONFIRM_TOKEN);
-          return Promise.reject(e);
-        });
+        .catch(e => Promise.reject(e))
+        .finally(() => clear(STORAGE_CONFIRM_TOKEN));
     }
     return Promise.reject(new Error(`Password confirmation does't match.`));
   };
@@ -168,4 +165,81 @@ export const login = async (el: HTMLElement) => {
       .then(() => postSubmitAction(el));
   };
   submitForm(el, run, actions.LOGIN);
+};
+
+export const forgotPassword = async (el: HTMLElement) => {
+  const email = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="email"]'
+  );
+
+  if (!email) {
+    logger.err(
+      `Forgot password forms must include an input for the email field.`
+    );
+    return;
+  }
+
+  let { confirmUserUrl } = parseSettings(el);
+  if (el.dataset.mtSettingConfirmUserUrl) {
+    confirmUserUrl = el.dataset.mtSettingConfirmUserUrl;
+  }
+  if (!confirmUserUrl) {
+    const res = await singleton.client.query<IConfirmUserUrls>({
+      query: GET_CONFIRM_USER_URLS
+    });
+    if (res.data && res.data.mSetting && res.data.mSetting.value.length) {
+      confirmUserUrl = res.data.mSetting.value[0];
+    }
+  }
+
+  const run = () => {
+    return singleton.client
+      .mutate<IVerifyEmail, IVerifyEmailVariables>({
+        mutation: VERIFY_EMAIL,
+        variables: {
+          email: email.value,
+          url: confirmUserUrl,
+          toResetPassword: true
+        }
+      })
+      .then(() => postSubmitAction(el))
+      .catch(() => null);
+  };
+  submitForm(el, run, actions.FORGOT_PASSWORD);
+};
+
+export const resetPassword = async (el: HTMLElement) => {
+  const pw = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="password"]'
+  );
+  const pwConfirm = el.querySelector<HTMLInputElement>(
+    'input[data-mt-action-form-field="passwordConfirm"]'
+  );
+
+  if (!pw) {
+    logger.err(`No password input in reset password form.`);
+    return;
+  }
+  const run = () => {
+    const match = pwConfirm ? pwConfirm.value === pw.value : true;
+    if (match) {
+      const mutation = gql`
+        mutation ResetPassword($token: String!, $newPassword: String!) {
+          mChangePassword(input: { token: $token, newPassword: $newPassword }) {
+            success
+          }
+        }
+      `;
+      const variables = {
+        newPassword: md5(pw.value),
+        token: get(STORAGE_CONFIRM_TOKEN)
+      };
+      return singleton.client
+        .mutate({ mutation, variables })
+        .then(() => postSubmitAction(el))
+        .finally(() => clear(STORAGE_CONFIRM_TOKEN));
+    }
+    return Promise.reject('Password and confirm password do not match.');
+  };
+  submitForm(el, run, actions.RESET_PASSWORD);
 };

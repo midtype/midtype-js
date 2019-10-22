@@ -9,7 +9,9 @@ const ACTIONS: { [key: string]: IMidtypeActionMetadata } = {
   LOGIN: { id: 'login' },
   LOGIN_GOOGLE: { id: 'signup' },
   LOGOUT: { id: 'signup' },
-  MUTATION: { id: 'mutation' }
+  MUTATION: { id: 'mutation' },
+  FORGOT_PASSWORD: { id: 'forgotPassword' },
+  RESET_PASSWORD: { id: 'resetPassword' }
 };
 
 export default ACTIONS;
