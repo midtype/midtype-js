@@ -40,15 +40,19 @@ singleton.init = (config: IMidtypeConfig) => {
 
   // Compute API endpoint and instantiate Apollo client for our user later.
   singleton.client = client(config.endpoint);
-  singleton.fetch = (body: any) =>
-    fetch(config.endpoint, {
-      headers: {
-        authorization: `Bearer ${getJWT()}`,
-        'content-type': 'application/json'
-      },
+  singleton.fetch = (body: any) => {
+    const headers = getJWT()
+      ? {
+          authorization: `Bearer ${getJWT()}`,
+          'content-type': 'application/json'
+        }
+      : { 'content-type': 'application/json' };
+    return fetch(config.endpoint, {
+      headers: headers as any,
       body: JSON.stringify(body),
       method: 'POST'
     }).then(res => res.json());
+  };
 
   // Saves the provided config file to the global window object.
   singleton.config = config;
