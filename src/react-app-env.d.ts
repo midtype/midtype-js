@@ -71,3 +71,41 @@ interface IMidtypeActionMetadata {
   id: string;
   description?: string;
 }
+
+interface IActions {
+  logout: () => void;
+  verifyEmail: (input: IVerifyEmailInput) => Promise<undefined>;
+  signup: (input: ISignupInput) => Promise<undefined>;
+  login: (input: ILoginInput) => Promise<string>;
+  loginGoogle: () => void;
+  forgotPassword: (input: IVerifyEmailInput) => Promise<undefined>;
+  resetPassword: (input: IResetPasswordInput) => Promise<undefined>;
+  subscribe: (input: ISubscribeInput) => Promise<undefined>;
+}
+
+interface ILoginInput {
+  email: string;
+  password: string;
+}
+
+interface IVerifyEmailInput {
+  email: string;
+  confirmUserUrl: string;
+}
+
+interface ISignupInput {
+  name: string;
+  password: string;
+  passwordConfirm?: string;
+}
+
+interface IResetPasswordInput {
+  password: string;
+  passwordConfirm?: string;
+}
+
+interface ISubscribeInput {
+  token: string;
+  plan: string;
+  coupon?: string;
+}

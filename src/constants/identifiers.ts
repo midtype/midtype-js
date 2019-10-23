@@ -2,6 +2,7 @@ import { clearJWT, getJWT } from '../utils/jwt';
 import { ApolloClient } from 'apollo-boost';
 
 import { enableStripe } from '../lib/subscription';
+import { Midtype } from '../lib/singleton';
 
 export const ROOT_ELEMENT_ID = 'midtype';
 
@@ -34,5 +35,11 @@ const WINDOW_OBJECT_ID = 'Midtype';
   data: {}
 };
 export const singleton: MidtypeObject = (window as any)[WINDOW_OBJECT_ID];
+
+(window as any)['mt'] = {
+  init: (config: IMidtypeConfig) => {
+    (window as any)['mt'] = new Midtype(config);
+  }
+};
 
 export const STORAGE_CONFIRM_TOKEN = 'token';

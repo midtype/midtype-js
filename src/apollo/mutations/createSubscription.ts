@@ -13,3 +13,17 @@ export default gql`
     }
   }
 `;
+
+export interface ICreateSubscription {
+  mStripeSubscription: {
+    id: string;
+    pid: string;
+    active: boolean;
+  };
+}
+
+export interface ICreateSubscriptionVariables {
+  plan: string;
+  token: string;
+  coupon?: string;
+}
