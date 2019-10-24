@@ -18,3 +18,11 @@ export const parsedFieldToQuery = (fields: any) => {
   });
   return q;
 };
+
+export const isGraphObject = (obj: string) =>
+  obj.endsWith('Connection') ||
+  obj.endsWith('Edge') ||
+  obj.endsWith('Payload') ||
+  obj.startsWith('__') ||
+  obj === 'Query' ||
+  obj === 'Mutation';

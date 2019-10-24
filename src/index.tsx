@@ -1,4 +1,4 @@
-import client from './apollo/client';
+import { initClient } from './apollo/client';
 import { singleton } from './constants/identifiers';
 import { handleData } from './lib/data';
 import { handleForms, handleActionForms, handleActions } from './lib/forms';
@@ -39,7 +39,7 @@ singleton.init = (config: IMidtypeConfig) => {
   }
 
   // Compute API endpoint and instantiate Apollo client for our user later.
-  singleton.client = client(config.endpoint);
+  singleton.client = initClient(config.endpoint);
   singleton.fetch = (body: any) =>
     fetch(config.endpoint, {
       headers: {

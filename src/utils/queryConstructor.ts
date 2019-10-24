@@ -1,6 +1,6 @@
 import { gql } from 'apollo-boost';
+import { pascalCase, camelCase } from 'change-case';
 import pluralize from 'pluralize';
-import changeCase from 'change-case';
 
 import { parsedFieldToQuery } from './text';
 
@@ -18,6 +18,8 @@ const getFields = (fields: string[]) => {
   return map;
 };
 
+export const singularize = (name: string) => pluralize.singular(name);
+
 const parseField = (fields: any, name?: string) => {
   if (name) {
     const split = name.split('.');
@@ -31,29 +33,108 @@ const parseField = (fields: any, name?: string) => {
 };
 
 export const single = (model: string, fields: string[]) => {
-  const singular = pluralize.singular(model);
   const map = getFields(fields);
-  const query = gql`
-    query Get${changeCase.pascalCase(singular)}($id: UUID!) {
-      ${singular}(id: $id) {
+  return gql`
+    query Get${pascalCase(model)}($id: UUID!) {
+      ${model}(id: $id) {
         ${parsedFieldToQuery(map)}
       }
     }
   `;
-  return { query, singular };
 };
 
 export const multiple = (model: string, fields: string[]) => {
-  const plural = pluralize(model);
   const map = getFields(fields);
-  const query = gql`
-    query Get${changeCase.pascalCase(plural)} {
-      ${plural} {
+  return gql`
+    query Get${pascalCase(model)} {
+      ${model} {
         nodes {
           ${parsedFieldToQuery(map)}
         }
       }
     }
   `;
-  return { query, plural };
+};
+
+export const create = (model: string, data: any, schema: ISchema) => {
+  const upper = pascalCase(model);
+  const camel = camelCase(model);
+  const nonRefFields = Object.keys(schema.models[upper]).filter(
+    field => !schema.models[upper][field].reference
+  );
+  const inputKey = `Create${pascalCase(model)}Input`;
+  if (!schema.inputs[inputKey] || !schema.inputs[inputKey][camel]) {
+    throw Error(
+      `Input for creating a new record of model '${model}' not found.`
+    );
+  }
+  const input = schema.inputs[inputKey][camel].reference;
+  Object.keys(data).forEach(field => {
+    if (!input[field]) {
+      throw Error(
+        `Input field '${field}' not recognized in mutation for creating new record of model '${model}'.`
+      );
+    }
+  });
+  return gql`
+    mutation Create${pascalCase(model)}(
+      ${Object.keys(data)
+        .map(field => `$${field}: ${input[field].type}!`)
+        .join('\n')}
+    ) {
+      create${pascalCase(model)}(input: {
+        ${model}: {
+          ${Object.keys(data)
+            .map(field => `${field}: $${field}`)
+            .join('\n')}
+        }
+      }) {
+        ${model} {
+          ${nonRefFields.join('\n')}
+        }
+      }
+    }
+  `;
+};
+
+export const update = (model: string, data: any, schema: ISchema) => {
+  const upper = pascalCase(model);
+  const nonRefFields = Object.keys(schema.models[upper]).filter(
+    field => !schema.models[upper][field].reference
+  );
+  const inputKey = `${pascalCase(model)}Patch`;
+  if (!schema.inputs[inputKey]) {
+    throw Error(
+      `Patch input for updating a record of model '${model}' not found.`
+    );
+  }
+  const input = schema.inputs[inputKey];
+  Object.keys(data).forEach(field => {
+    if (!input[field]) {
+      throw Error(
+        `Input field '${field}' not recognized in mutation for updating record of model '${model}'.`
+      );
+    }
+  });
+  return gql`
+    mutation Update${pascalCase(model)}(
+      $id: UUID!,
+      ${Object.keys(data)
+        .map(field => `$${field}: ${input[field].type}!`)
+        .join('\n')}
+    ) {
+      update${pascalCase(model)}(input: {
+        id: $id,
+        patch: {
+          ${Object.keys(data)
+            .map(field => `${field}: $${field}`)
+            .join('\n')}
+        }
+      }) {
+        ${model} {
+          ${nonRefFields.join('\n')}
+        }
+      }
+    }
+  `;
 };

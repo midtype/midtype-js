@@ -36,31 +36,31 @@
     </style>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        Midtype.init({
-          redirects: {
-            signedOut: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }],
-            signedIn: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }]
-          },
-          projectId: 'clokka',
-          endpoint: 'https://clokka-dx6qqezema-uc.a.run.app/graphql',
-          redirectUrl: 'https://midtype.webflow.io/profile',
-          stripe: {
-            pk: 'pk_test_rb3Nm1iYchLwmERdI9lSuLEw00BvP09UfH',
-            options: {
-              style: {
-                base: {
-                  color: '#32325d',
-                  fontFamily: '"Courier New", Helvetica, sans-serif',
-                  fontSmoothing: 'antialiased'
-                }
-              }
-            }
-          }
-        });
+        // Midtype.init({
+        //   redirects: {
+        //     signedOut: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }],
+        //     signedIn: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }]
+        //   },
+        //   projectId: 'clokka',
+        //   endpoint: 'https://clokka-dx6qqezema-uc.a.run.app/graphql',
+        //   redirectUrl: 'https://midtype.webflow.io/profile',
+        //   stripe: {
+        //     pk: 'pk_test_rb3Nm1iYchLwmERdI9lSuLEw00BvP09UfH',
+        //     options: {
+        //       style: {
+        //         base: {
+        //           color: '#32325d',
+        //           fontFamily: '"Courier New", Helvetica, sans-serif',
+        //           fontSmoothing: 'antialiased'
+        //         }
+        //       }
+        //     }
+        //   }
+        // });
         mt.init({
-          projectId: 'clokka',
-          endpoint: 'https://clokka-dx6qqezema-uc.a.run.app/graphql',
-          redirectUrl: 'https://midtype.webflow.io/profile'
+          projectId: 'todooli',
+          endpoint: 'https://todooli-pkv6fida6a-uc.a.run.app/graphql',
+          redirectUrl: 'http://localhost:3000/login'
         });
       });
     </script>

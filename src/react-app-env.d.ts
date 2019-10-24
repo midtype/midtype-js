@@ -73,7 +73,9 @@ interface IMidtypeActionMetadata {
 }
 
 interface IActions {
+  introspect: () => Promise<ISchema>;
   logout: () => void;
+  getUser: () => Promise<undefined>;
   verifyEmail: (input: IVerifyEmailInput) => Promise<undefined>;
   signup: (input: ISignupInput) => Promise<undefined>;
   login: (input: ILoginInput) => Promise<string>;
@@ -109,3 +111,26 @@ interface ISubscribeInput {
   plan: string;
   coupon?: string;
 }
+
+type ISchemaModel = { [key: string]: ISchemaField };
+
+interface ISchemaField {
+  type: string;
+  required: boolean;
+  reference?: ISchemaModel;
+}
+
+interface ISchema {
+  complete: boolean;
+  inputs: {
+    [key: string]: any;
+  };
+  models: {
+    [key: string]: ISchemaModel;
+  };
+}
+
+type IMidtypeCreate = (args?: any) => Promise<any>;
+type IMidtypeQuery = (id: string, fields: string[]) => Promise<any>;
+type IMidtypeQueryAll = (fields: string[]) => Promise<any>;
+type IMidtypeUpdate = (id: string, data?: any) => Promise<any>;
