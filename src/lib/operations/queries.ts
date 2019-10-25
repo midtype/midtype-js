@@ -1,4 +1,4 @@
-import { ApolloClient } from 'apollo-boost';
+import { ApolloClient } from 'apollo-client';
 import { upperCaseFirst } from 'change-case';
 import pluralize from 'pluralize';
 

@@ -1,4 +1,4 @@
-import { ApolloClient } from 'apollo-boost';
+import { ApolloClient } from 'apollo-client';
 import { upperCaseFirst, pascal } from 'change-case';
 
 import { singularize, update, create } from '../../utils/queryConstructor';

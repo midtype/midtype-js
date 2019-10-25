@@ -1,4 +1,4 @@
-import { ApolloClient } from 'apollo-boost';
+import { ApolloClient } from 'apollo-client';
 
 import logger from '../../utils/logger';
 import INTROSPECT from '../../apollo/queries/introspection';
@@ -8,7 +8,11 @@ export const initIntrospect = (client: ApolloClient<any>) => async () => {
   const schema: ISchema = {
     complete: false,
     inputs: {},
-    models: {}
+    models: {},
+    integrations: {
+      stripe: false,
+      customUser: false
+    }
   };
   try {
     const { data } = await client.query({
@@ -27,6 +31,14 @@ export const initIntrospect = (client: ApolloClient<any>) => async () => {
                 model[field.name] = { type, required: true };
               } else if (type) {
                 model[field.name] = { type, required: false };
+              }
+            });
+          } else if (type.name === 'Mutation') {
+            type.fields.forEach((field: any) => {
+              if (field.name === 'createMStripeSubscription') {
+                schema.integrations.stripe = true;
+              } else if (field.name === 'createMUser') {
+                schema.integrations.customUser = true;
               }
             });
           }

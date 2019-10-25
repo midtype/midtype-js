@@ -6,7 +6,15 @@ export const set = (key: string, value: any) => {
 
 export const get = (key: string): any => {
   const value = window.localStorage.getItem(keyToStore(key));
-  return value ? JSON.parse(value) : null;
+  if (!value) {
+    return null;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    clear(keyToStore(key));
+  }
+  return null;
 };
 
 export const clear = (key: string, redirect?: string) => {

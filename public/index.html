@@ -7,215 +7,36 @@
     <title>Midtype</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-      .StripeElement {
-        margin: 30px 0;
+      body {
+        background: lightgray;
+      }
+      #signupContainer,
+      #loginContainer {
+        background: white;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
         width: 400px;
-        padding: 20px;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        background-color: white;
-        box-shadow: 0 0px 10px 0 rgba(0, 0, 0, 0.2);
-      }
-      #loginError {
-        width: 300px;
-        height: 150px;
-        background: red;
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        opacity: 0;
-        visibility: hidden;
-        transition: 250ms all;
-        color: white;
-        font-weight: bold;
-      }
-      #loginError.mt-error-visible {
-        opacity: 1;
-        visibility: visible;
+        margin: auto;
+        margin-top: 50px;
+        border-radius: 5px;
       }
     </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="signupContainer">
+      <mt-signup></mt-signup>
+    </div>
+    <div id="loginContainer">
+      <mt-login></mt-login>
+    </div>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // Midtype.init({
-        //   redirects: {
-        //     signedOut: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }],
-        //     signedIn: [{ paths: ['/data/', '/sign-in'], redirect: '/test' }]
-        //   },
-        //   projectId: 'clokka',
-        //   endpoint: 'https://clokka-dx6qqezema-uc.a.run.app/graphql',
-        //   redirectUrl: 'https://midtype.webflow.io/profile',
-        //   stripe: {
-        //     pk: 'pk_test_rb3Nm1iYchLwmERdI9lSuLEw00BvP09UfH',
-        //     options: {
-        //       style: {
-        //         base: {
-        //           color: '#32325d',
-        //           fontFamily: '"Courier New", Helvetica, sans-serif',
-        //           fontSmoothing: 'antialiased'
-        //         }
-        //       }
-        //     }
-        //   }
-        // });
         mt.init({
-          projectId: 'todooli',
-          endpoint: 'https://todooli-pkv6fida6a-uc.a.run.app/graphql',
+          projectId: 'todooli-nostripe',
+          endpoint: 'https://todooli-nostripe-mgif7knuia-uc.a.run.app/graphql',
           redirectUrl: 'http://localhost:3000/login'
         });
       });
     </script>
-  </head>
-  <body>
-    <div style="color:red" id="error"></div>
-    <button data-mt-action="loginGoogle" data-mt-if-not="user">Login</button>
-    <button data-mt-action="logout" data-mt-if="user">Logout</button>
-
-    <hr />
-
-    <div data-mt-query="user" data-mt-if="user">
-      <h1 data-mt-field="private.name"></h1>
-      <span data-mt-field="private.email"></span>
-      <img
-        data-mt-field="private.photoUrl"
-        data-mt-field-attribute="src"
-        width="100"
-      />
-    </div>
-
-    <hr />
-
-    <div data-mt-query="user" data-mt-if="user">
-      <h1 data-mt-field="metadatumByUserId.firstName"></h1>
-      <span data-mt-field="metadatumByUserId.id"></span>
-      <form
-        data-mt-mutate="metadatum"
-        data-mt-mutate-id-value="metadatumByUserId.id"
-      >
-        <input
-          type="text"
-          data-mt-mutate-field="firstName"
-          data-mt-mutate-field-type="user.private.name"
-        />
-        <input type="submit" value="Update" />
-      </form>
-    </div>
-
-    <hr />
-
-    <form
-      data-mt-action-form="verifyEmail"
-      data-mt-settings="{confirmUserUrl:'https://midtype.webflow.io/sign-up/sign-up-free', submitUrl: 'https://midtype.webflow.io/sign-up/email-confirmation'}"
-      data-mt-if-not="user,token"
-    >
-      <h2>Sign Up</h2>
-      <input type="text" data-mt-action-form-field="email" />
-      <input type="submit" value="Sign Up" />
-    </form>
-
-    <hr />
-
-    <div data-mt-query="user" data-mt-if="user">
-      <form
-        data-mt-mutate="metadatum"
-        data-mt-mutate-id-value="metadatumByUserId.id"
-      >
-        <input
-          type="text"
-          data-mt-field="metadatumByUserId.firstName"
-          data-mt-field-attribute="value"
-          data-mt-mutate-field="firstName"
-        />
-        <input type="submit" value="Submit" />
-      </form>
-    </div>
-
-    <hr />
-
-    <form
-      data-mt-action-form="signup"
-      data-mt-if-not="user"
-      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
-      data-mt-error="#error"
-    >
-      <h2>Register</h2>
-      <h3>Name</h3>
-      <input type="text" data-mt-action-form-field="name" />
-      <h3>Password</h3>
-      <input type="password" data-mt-action-form-field="password" />
-      <h3>Confirm Password</h3>
-      <input type="password" data-mt-action-form-field="passwordConfirm" />
-      <div data-mt-action-form-model="metadatum">
-        <input
-          type="text"
-          data-mt-action-form-field="firstName"
-          data-mt-action-form-field-type="user.private.name"
-        />
-        <input
-          type="text"
-          data-mt-action-form-field="userId"
-          data-mt-action-form-field-type="user.id"
-        />
-      </div>
-      <input type="submit" value="Register" />
-    </form>
-
-    <form
-      data-mt-action-form="forgotPassword"
-      data-mt-if-not="user,token"
-      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
-    >
-      <h2>Forgot Password?</h2>
-      <h3>Email</h3>
-      <input type="text" data-mt-action-form-field="email" />
-      <input type="submit" value="Send Email" />
-    </form>
-
-    <form
-      data-mt-action-form="resetPassword"
-      data-mt-if-not="user"
-      data-mt-if="token"
-      data-mt-setting-confirm-user-url="http://localhost:3000/forgot"
-      data-mt-error="#error"
-    >
-      <h2>Reset Password</h2>
-      <h3>New Password</h3>
-      <input type="text" data-mt-action-form-field="password" />
-      <h3>Confirm Password</h3>
-      <input type="text" data-mt-action-form-field="passwordConfirm" />
-      <input type="submit" value="Reset" />
-    </form>
-
-    <form
-      data-mt-action-form="login"
-      data-mt-if-not="user"
-      data-redirect="http://localhost:3000/profile"
-      data-mt-error="#loginError"
-    >
-      <h2>Sign In</h2>
-      <input type="text" data-mt-action-form-field="email" />
-      <input type="password" data-mt-action-form-field="password" />
-      <input type="submit" value="Sign In" />
-    </form>
-    <div id="loginError"></div>
-    <form
-      data-mt-action-form="subscribe"
-      data-mt-mutate-id="3470cde5-eb14-4e15-bd8d-a8360e1d9f4a"
-      data-mt-error="#loginError"
-    >
-      <h4>Name</h4>
-      <input type="text" data-mt-action-form-field="name" />
-      <h4>Street</h4>
-      <input type="text" data-mt-action-form-field="addressStreet" />
-      <h4>City</h4>
-      <input type="text" data-mt-action-form-field="addressCity" />
-      <h4>State</h4>
-      <input type="text" data-mt-action-form-field="addressState" />
-      <h4>Zip</h4>
-      <input type="text" data-mt-action-form-field="addressZip" />
-      <h4>Coupon</h4>
-      <input type="text" data-mt-action-form-field="coupon" />
-      <div data-mt-action-form-field="creditCard"></div>
-      <input type="submit" value="subscribe" />
-    </form>
   </body>
 </html>

@@ -16,9 +16,11 @@ interface IStripeConfig {
 
 interface IUser {
   id: string;
-  name: string;
-  email: string;
-  photoUrl: string;
+  private: {
+    name: string;
+    email: string;
+    photoUrl: string;
+  };
   subscription: IStripeSubscription;
 }
 
@@ -99,6 +101,7 @@ interface ISignupInput {
   name: string;
   password: string;
   passwordConfirm?: string;
+  token?: string;
 }
 
 interface IResetPasswordInput {
@@ -122,6 +125,7 @@ interface ISchemaField {
 
 interface ISchema {
   complete: boolean;
+  integrations: IMidtypeIntegrations;
   inputs: {
     [key: string]: any;
   };
@@ -134,3 +138,8 @@ type IMidtypeCreate = (args?: any) => Promise<any>;
 type IMidtypeQuery = (id: string, fields: string[]) => Promise<any>;
 type IMidtypeQueryAll = (fields: string[]) => Promise<any>;
 type IMidtypeUpdate = (id: string, data?: any) => Promise<any>;
+
+interface IMidtypeIntegrations {
+  stripe: boolean;
+  customUser: boolean;
+}

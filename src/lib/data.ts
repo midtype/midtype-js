@@ -1,6 +1,6 @@
 import changeCase from 'change-case';
 import pluralize from 'pluralize';
-import { gql } from 'apollo-boost';
+import gql from 'graphql-tag';
 
 import { handleHidden } from './hidden';
 

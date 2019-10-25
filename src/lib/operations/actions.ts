@@ -1,6 +1,6 @@
-import { ApolloClient } from 'apollo-boost';
 import md5 from 'md5';
 
+import Midtype from '../singleton';
 import { STORAGE_CONFIRM_TOKEN } from '../../constants/identifiers';
 import { get, clear } from '../../utils/store';
 
@@ -25,17 +25,13 @@ import CREATE_SUBSCRIPTION, {
   ICreateSubscription,
   ICreateSubscriptionVariables
 } from '../../apollo/mutations/createSubscription';
-import {
-  GET_CURRENT_USER,
-  GET_CURRENT_USER_WITH_STRIPE
-} from '../../apollo/queries/currentUser';
+import { GET_CURRENT_USER } from '../../apollo/queries/currentUser';
 
 import { initIntrospect } from './introspect';
 
-export const initActions = (
-  config: IMidtypeConfig,
-  client: ApolloClient<any>
-): IActions => {
+export const initActions = (midtype: Midtype): IActions => {
+  const { client, config } = midtype;
+
   const logout = () => clearJWT();
 
   const introspect = initIntrospect(client);
@@ -43,8 +39,9 @@ export const initActions = (
   const getUser = async () => {
     if (getJWT()) {
       const { data } = await client.query({
-        query: config.stripe ? GET_CURRENT_USER_WITH_STRIPE : GET_CURRENT_USER
+        query: GET_CURRENT_USER
       });
+      midtype.user = data.mUserInSession;
       return data.mUserInSession;
     }
   };
@@ -72,7 +69,7 @@ export const initActions = (
       return Promise.reject(`Password and confirm password do not match.`);
     }
 
-    const token = get(STORAGE_CONFIRM_TOKEN);
+    const token = input.token || get(STORAGE_CONFIRM_TOKEN);
     if (!token) {
       return Promise.reject(`No confirmation token saved to local storage.`);
     }
@@ -81,9 +78,9 @@ export const initActions = (
     return client
       .mutate<ISignup, ISignupVariables>({ mutation: SIGNUP, variables })
       .then(({ data }) => {
-        const { jwt } = data.createMUser;
-        setJWT(jwt);
-        return Promise.resolve(jwt);
+        const { jwtToken } = data.createMUser;
+        setJWT(jwtToken);
+        return Promise.resolve(jwtToken);
       })
       .finally(() => clear(STORAGE_CONFIRM_TOKEN));
   };
@@ -107,7 +104,7 @@ export const initActions = (
       .then(({ data }) => {
         const { jwtToken } = data.mAuthenticate;
         setJWT(jwtToken);
-        return Promise.resolve(jwtToken);
+        return getUser();
       });
   };
 

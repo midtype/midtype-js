@@ -1,14 +1,16 @@
-import { ApolloClient, gql } from 'apollo-boost';
 import { plural } from 'pluralize';
 import { pascal, camel } from 'change-case';
+import ApolloClient from 'apollo-client';
+import gql from 'graphql-tag';
 
 import { initClient } from '../apollo/client';
 import { initActions } from './operations/actions';
+import { initReact } from './dom/react';
 import { initQuery, initQueryAll } from './operations/queries';
 import { initUpdate, initCreate } from './operations/mutations';
 import { midtypeModels } from '../constants';
 
-export class Midtype {
+export default class Midtype {
   public config: IMidtypeConfig;
   public actions: IActions;
   public client: ApolloClient<any>;
@@ -23,22 +25,28 @@ export class Midtype {
   private schema: ISchema = {
     complete: false,
     inputs: {},
-    models: {}
+    models: {},
+    integrations: {
+      stripe: false,
+      customUser: false
+    }
   };
 
   constructor(config: IMidtypeConfig) {
     this.config = config;
     this.client = initClient(config.endpoint);
-    this.actions = initActions(config, this.client);
+    this.actions = initActions(this);
+    this.init();
   }
 
-  init = async () => {
+  private init = async () => {
     this.schema = await this.actions.introspect();
     this.user = await this.actions.getUser();
     this.initOperations();
+    initReact(this);
   };
 
-  initOperations = () => {
+  private initOperations = () => {
     const { schema, client } = this;
     Object.keys(schema.models).forEach(model => {
       const camelCase = camel(model);

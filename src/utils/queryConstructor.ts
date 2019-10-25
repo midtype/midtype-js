@@ -1,4 +1,4 @@
-import { gql } from 'apollo-boost';
+import gql from 'graphql-tag';
 import { pascalCase, camelCase } from 'change-case';
 import pluralize from 'pluralize';
 

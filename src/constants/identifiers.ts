@@ -1,8 +1,8 @@
 import { clearJWT, getJWT } from '../utils/jwt';
-import { ApolloClient } from 'apollo-boost';
+import { ApolloClient } from 'apollo-client';
 
 import { enableStripe } from '../lib/subscription';
-import { Midtype } from '../lib/singleton';
+import Midtype from '../lib/singleton';
 
 export const ROOT_ELEMENT_ID = 'midtype';
 

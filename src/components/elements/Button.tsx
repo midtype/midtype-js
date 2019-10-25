@@ -1,13 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import * as colors from '../constants/colors';
+import * as colors from '../../constants/colors';
 
 interface IProps {
   className?: string;
   status?: string;
   secondary?: boolean;
-  onClick?: () => void;
+  onClick?: (e: any) => void;
   style?: React.CSSProperties;
   loading?: boolean;
 }
@@ -17,19 +17,18 @@ const Styled = styled.button`
   box-shadow: none;
   outline: none;
   background: none;
-  padding: 10px;
+  padding: 10px 20px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   border-radius: 5px;
-  transition: 0.5s all ease-in-out;
+  transition: 250ms all ease-in-out;
   transform: translateZ(0);
   text-decoration: none;
-  text-transform: uppercase;
   font-weight: bold;
-  letter-spacing: 2px;
-  font-size: 0.8rem;
+  font-size: 14px;
 
   background-color: ${(props: IProps) =>
     props.secondary ? colors.WHITE() : colors.BRAND_1()};
@@ -37,12 +36,7 @@ const Styled = styled.button`
   color: ${(props: IProps) =>
     props.secondary ? colors.BRAND_1() : colors.WHITE()};
 
-  box-shadow: 0 0 1px 0 rgba(8, 11, 14, 0.06),
-    0 6px 6px -1px rgba(8, 11, 14, 0.1);
-
   &:hover {
-    box-shadow: -1 0 1px 0 rgba(8, 11, 14, 0.06),
-      0 16px 16px -1px rgba(8, 11, 14, 0.1);
     transform: translateY(-2px);
   }
 

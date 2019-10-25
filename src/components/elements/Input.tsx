@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import * as styles from '../constants/styles';
+import * as styles from '../../constants/styles';
 
 interface IProps {
   value: string;
   onChange: (value: string) => void;
+  inputProps?: any;
   textarea?: boolean;
   style?: React.CSSProperties;
 }
@@ -15,11 +16,12 @@ const StyledInput = styled.input`
   border: 1px solid rgba(0, 0, 0, 0);
   box-shadow: ${styles.BOX_SHADOW};
   border-radius: 5px;
-  padding: 0.5rem 0.75rem;
+  padding: 12px;
+  height: 40px;
   transition: 250ms all;
   outline: none;
   width: 100%;
-  font-size: 0.8rem;
+  font-size: 14px;
   &:focus {
     border: 1px solid rgba(0, 0, 0, 0.1);
   }
@@ -48,12 +50,14 @@ const Input: React.FC<IProps> = props => {
       style={props.style}
       value={props.value}
       onChange={e => props.onChange(e.target.value)}
+      {...props.inputProps}
     />
   ) : (
     <StyledInput
       style={props.style}
       value={props.value}
       onChange={e => props.onChange(e.target.value)}
+      {...props.inputProps}
     />
   );
 };

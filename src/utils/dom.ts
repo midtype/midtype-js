@@ -1,7 +1,7 @@
 import JSON5 from 'json5';
 import changeCase from 'change-case';
 import pluralize from 'pluralize';
-import { gql } from 'apollo-boost';
+import gql from 'graphql-tag';
 
 import logger from './logger';
 import handleError from './error';

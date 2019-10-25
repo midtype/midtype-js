@@ -1,72 +1,72 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React from 'react';
+import { createGlobalStyle } from 'styled-components';
 
-import Login from './components/LoginModal';
-import { singleton } from './constants/identifiers';
+import VerifyEmail from './components/VerifyEmail';
+import Login from './components/Login';
 
-const Styled = styled.div`
-  margin: 0;
-  font-family: Avenir, Helvetica, sans-serif, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  * {
-    box-sizing: border-box;
-  }
-
-  p,
-  input,
-  textarea {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.2rem;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5 {
-    margin: 0;
-    padding: 0;
-    font-weight: 500;
-  }
-
-  code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
-  }
-
-  a,
-  button {
+const Styles = createGlobalStyle`
+  .midtype-element {
     font-family: Avenir, Helvetica, sans-serif, Arial, sans-serif;
-    text-decoration: none;
-    cursor: pointer;
-    border: 0;
-    outline: none;
-    padding: 0;
-    font-size: inherit;
-    color: blue;
-    background: none;
-    cursor: pointer;
-  }
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 
-  ul,
-  li {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    padding: 30px;
+    text-align: center;
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+    p,
+    input,
+    textarea {
+      margin: 0;
+      font-family: Avenir, Helvetica, sans-serif, Arial, sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+      margin: 0;
+      padding: 0;
+      font-weight: 500;
+    }
+
+    button,
+    a {
+      font-family: Avenir, Helvetica, sans-serif, Arial, sans-serif;
+    }
+
+    code {
+      font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+    }
+
+    label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    ul,
+    li {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
   }
 `;
 
 const App: React.FC = () => {
-  const [login, setLogin] = useState(false);
-  singleton.openLogin = () => setLogin(true);
-
   return (
-    <Styled>
-      <Login open={login} onClickClose={() => setLogin(false)} />
-    </Styled>
+    <React.Fragment>
+      <VerifyEmail confirmUserUrl="http://localhost:3000/login" />
+      <Login />
+      <Styles />
+    </React.Fragment>
   );
 };
 

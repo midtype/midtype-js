@@ -1,5 +1,5 @@
 import md5 from 'md5';
-import { gql } from 'apollo-boost';
+import gql from 'graphql-tag';
 
 import { singleton, STORAGE_CONFIRM_TOKEN } from '../constants/identifiers';
 import { getUser } from './user';
